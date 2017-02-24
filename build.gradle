@@ -1,0 +1,39 @@
+allprojects {
+    apply plugin: 'java'
+
+    group 'com.braintreepayments'
+    version '2.0'
+    sourceCompatibility = 1.8
+    targetCompatibility = 1.8
+
+    repositories {
+        mavenCentral()
+        jcenter()
+    }
+
+}
+
+project(':core') {
+    dependencies {
+        compileOnly "org.projectlombok:lombok:1.16.10"
+
+        compile 'com.google.code.gson:gson:[2,3)'
+
+        testCompile project(':testutils')
+    }
+
+    test {
+        useTestNG {
+            testLogging.showStandardStreams = true
+            outputs.upToDateWhen { false }
+        }
+    }
+}
+
+project(':testutils') {
+    dependencies {
+        compile group: 'org.testng', name: 'testng', version: '6.9.13.6'
+        compile "com.github.tomakehurst:wiremock:2.4.1"
+        compile "org.mockito:mockito-core:2.+"
+    }
+}
