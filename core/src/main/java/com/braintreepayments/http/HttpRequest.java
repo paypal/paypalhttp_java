@@ -6,10 +6,12 @@ import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import lombok.experimental.NonFinal;
 
-@Data
+@Data()
+@NonFinal
 @Accessors(chain=true, fluent = true)
-public final class HttpRequest<T> {
+public class HttpRequest<T> {
 
 	public HttpRequest(String path, String verb, Class<T> responseClass) {
 		this.path = path;
