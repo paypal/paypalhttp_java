@@ -20,7 +20,11 @@ public final class JSONFormatter {
 	 * @return JSON representation
 	 */
 	public static <T> String toJSON(T t) {
-		return GSON.toJson(t);
+		if (t instanceof String) {
+			return (String) t;
+		} else {
+			return GSON.toJson(t);
+		}
 	}
 
 	/**

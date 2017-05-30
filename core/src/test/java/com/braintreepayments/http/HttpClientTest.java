@@ -1,10 +1,11 @@
 package com.braintreepayments.http;
 
+import com.braintreepayments.http.exceptions.APIException;
+import com.braintreepayments.http.internal.JSONFormatter;
+import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
-import com.braintreepayments.http.exceptions.*;
-import com.braintreepayments.http.internal.TLSSocketFactory;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -12,17 +13,16 @@ import org.testng.annotations.Test;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
-import java.lang.reflect.Field;
 import java.lang.reflect.InvocationTargetException;
-import java.net.HttpURLConnection;
-import java.net.URL;
+import java.net.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static com.braintreepayments.http.Headers.CONTENT_TYPE;
+import static com.braintreepayments.http.Headers.USER_AGENT;
 import static com.github.tomakehurst.wiremock.client.WireMock.*;
 import static com.github.tomakehurst.wiremock.http.RequestMethod.*;
-import static com.braintreepayments.http.Headers.*;
 import static java.net.HttpURLConnection.*;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
@@ -31,14 +31,26 @@ import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
-public class DefaultHttpClientTest extends BasicWireMockHarness {
+public class HttpClientTest extends BasicWireMockHarness {
 
-    private DefaultHttpClient client = null;
+    private HttpClient client = null;
+
+    private static class JsonHttpClient extends HttpClient {
+		@Override
+		protected String serializeRequestBody(HttpRequest request) {
+			return JSONFormatter.toJSON(request.requestBody());
+		}
+
+		@Override
+		protected <T> T parseResponseBody(String responseBody, Class<T> responseClass) {
+			return JSONFormatter.fromJSON(responseBody, responseClass);
+		}
+	}
 
     @BeforeMethod
     public void setup() {
     	super.setup();
-        client = new DefaultHttpClient();
+        client = new JsonHttpClient();
     }
 
     @Test(dataProvider = "getErrorCodesWithException")
@@ -107,9 +119,7 @@ public class DefaultHttpClientTest extends BasicWireMockHarness {
     public void testHttpClient_usesDefaultSSLSocketFactoryWhenNoFactoryIsSet()
             throws IOException, NoSuchFieldException, IllegalAccessException {
 
-        Field sslSocketFactory = client.getClass().getDeclaredField("mSSLSocketFactory");
-        sslSocketFactory.setAccessible(true);
-        assertTrue(sslSocketFactory.get(client) instanceof TLSSocketFactory);
+    	assertTrue(client.getSSLSocketFactory() instanceof TLSSocketFactory);
     }
 
     @Test(expectedExceptions = IOException.class, expectedExceptionsMessageRegExp = "SSLSocketFactory was not set or failed to initialize")
@@ -221,7 +231,7 @@ public class DefaultHttpClientTest extends BasicWireMockHarness {
 
         client.execute(request);
         verify(postRequestedFor(urlEqualTo("/"))
-                .withRequestBody(equalTo("some data")));
+                .withRequestBody(containing("some data")));
     }
 
     @Test
@@ -324,14 +334,7 @@ public class DefaultHttpClientTest extends BasicWireMockHarness {
     @DataProvider(name = "getErrorCodesWithException")
     public Object[][] getErrorCodesWithException() {
         return new Object[][]{
-                {HTTP_UNAUTHORIZED, AuthenticationException.class},
-                {HTTP_FORBIDDEN, AuthorizationException.class},
-                {400, BadRequestException.class},
-                {422, UnprocessableEntityException.class},
-                {426, UpgradeRequiredException.class},
-                {429, RateLimitException.class},
-                {HTTP_INTERNAL_ERROR, InternalServerException.class},
-                {HTTP_UNAVAILABLE, DownForMaintenanceException.class}
+                {HTTP_UNAUTHORIZED, APIException.class},
         };
     }
 

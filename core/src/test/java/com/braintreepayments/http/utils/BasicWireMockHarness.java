@@ -19,7 +19,6 @@ public class BasicWireMockHarness extends WireMockHarness {
 	@Override
 	public void setup() {
 		super.setup();
-
 		mEnvironment = () -> String.format("http://%s:%d", host(), port());
 	}
 
@@ -33,7 +32,7 @@ public class BasicWireMockHarness extends WireMockHarness {
 		Map<String, String> headers = translateHeaders(request.headers());
 		String requestBody = null;
 		if (request.requestBody() != null) {
-			requestBody = request.serialize();
+			requestBody = JSONFormatter.toJSON(request.requestBody());
 		}
 
 		String responseBody = null;

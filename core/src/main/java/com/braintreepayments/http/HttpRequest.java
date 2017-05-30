@@ -1,12 +1,13 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.internal.JSONFormatter;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.NonFinal;
+
+import java.util.Base64;
 
 @Data()
 @NonFinal
@@ -22,6 +23,7 @@ public class HttpRequest<T> {
 	private String baseUrl;
 	private String path;
 	private String verb;
+	private Object requestBody;
 
 	@Getter
 	@Setter(AccessLevel.NONE)
@@ -31,8 +33,6 @@ public class HttpRequest<T> {
 	@Setter(AccessLevel.NONE)
 	private Headers headers = new Headers();
 
-	private Object requestBody;
-	private String oAuthScope;
 
 	public HttpRequest<T> header(String header, String value) {
 		headers.header(header, value);
@@ -43,11 +43,8 @@ public class HttpRequest<T> {
 		return baseUrl + path;
 	}
 
-	public String serialize() {
-		if (requestBody instanceof String) {
-			return (String) requestBody;
-		}
-
-		return JSONFormatter.toJSON(requestBody);
+	public void basicAuthorization(String publicKey, String privateKey) {
+		String auth = new String(Base64.getEncoder().encode((publicKey + ":" + privateKey).getBytes()));
+		headers.headerIfNotPresent("Authorization", "Basic " + auth);
 	}
 }

@@ -2,13 +2,16 @@ package com.braintreepayments.http;
 
 import org.testng.annotations.Test;
 
-import static org.testng.Assert.*;
+import java.util.Base64;
+
+import static org.testng.Assert.assertEquals;
+import static org.testng.Assert.assertNotNull;
 
 public class HttpRequestTest {
 
 	@Test
 	public void testHttpRequest_addHeader_setsHeaderInHeaders() {
-		HttpRequest<String> request = new HttpRequest<String>("/", "POST", String.class)
+		HttpRequest<String> request = new HttpRequest<>("/", "POST", String.class)
 				.header("key", "value");
 
 		assertNotNull(request.headers().header("key"));
@@ -16,10 +19,14 @@ public class HttpRequestTest {
 	}
 
 	@Test
-	public void testHttpRequest_serialize_stringBodyRemainsUnchanged() {
-		HttpRequest<Void> req = new HttpRequest<Void>("", "", Void.class)
-				.requestBody("{\"some_preformatted_json\":true}");
+	public void testHttpRequest_basic_authorization_setsHeaderCorrectly() {
+		HttpRequest<String> request = new HttpRequest<>("/", "POST", String.class);
 
-		assertEquals(req.serialize(), "{\"some_preformatted_json\":true}");
+		String user = "user";
+		String pass = "pass";
+		request.basicAuthorization(user, pass);
+
+		String authString = Base64.getEncoder().encodeToString((user + ":" + pass).getBytes());
+		assertEquals("Basic " + authString, request.headers().header("Authorization"));
 	}
 }

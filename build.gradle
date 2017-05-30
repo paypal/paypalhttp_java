@@ -16,7 +16,6 @@ allprojects {
 project(':core') {
     dependencies {
         compileOnly "org.projectlombok:lombok:1.16.10"
-
         compile 'com.google.code.gson:gson:[2,3)'
 
         testCompile project(':testutils')

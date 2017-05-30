@@ -1,6 +1,5 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.internal.JSONFormatter;
 import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;
@@ -20,14 +19,5 @@ public class HttpResponse<T> {
 			return new Headers();
 		}
 		return headers;
-	}
-
-	public static <T> HttpResponse<T> deserialize(Headers headers, int statusCode, String httpBody, Class<T> responseClass) {
-		HttpResponseBuilder<T> response = HttpResponse.<T>builder()
-				.headers(headers)
-				.statusCode(statusCode)
-				.result(JSONFormatter.fromJSON(httpBody, responseClass));
-
-		return response.build();
 	}
 }
