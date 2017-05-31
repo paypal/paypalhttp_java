@@ -19,7 +19,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public abstract class HttpClient {
+public abstract class BaseHttpClient {
 
 	private SSLSocketFactory mSSLSocketFactory;
 	private String mUserAgent;
@@ -28,7 +28,7 @@ public abstract class HttpClient {
 
 	List<Injector> mInjectors;
 
-	public HttpClient() {
+	public BaseHttpClient() {
 		mReadTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
 		mConnectTimeout = mReadTimeout;
 		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle

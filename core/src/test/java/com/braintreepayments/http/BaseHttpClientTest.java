@@ -1,7 +1,7 @@
 package com.braintreepayments.http;
 
 import com.braintreepayments.http.exceptions.APIException;
-import com.braintreepayments.http.internal.JSONFormatter;
+import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
@@ -31,11 +31,11 @@ import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
-public class HttpClientTest extends BasicWireMockHarness {
+public class BaseHttpClientTest extends BasicWireMockHarness {
 
-    private HttpClient client = null;
+    private BaseHttpClient client = null;
 
-    private static class JsonHttpClient extends HttpClient {
+    private static class JsonHttpClient extends BaseHttpClient {
 		@Override
 		protected String serializeRequestBody(HttpRequest request) {
 			return JSONFormatter.toJSON(request.requestBody());

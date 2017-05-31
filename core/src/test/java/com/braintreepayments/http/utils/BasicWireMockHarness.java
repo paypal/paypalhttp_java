@@ -4,7 +4,7 @@ import com.braintreepayments.http.Environment;
 import com.braintreepayments.http.Headers;
 import com.braintreepayments.http.HttpRequest;
 import com.braintreepayments.http.HttpResponse;
-import com.braintreepayments.http.internal.JSONFormatter;
+import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.testutils.WireMockHarness;
 import org.testng.annotations.BeforeMethod;
 

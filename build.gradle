@@ -16,8 +16,6 @@ allprojects {
 project(':core') {
     dependencies {
         compileOnly "org.projectlombok:lombok:1.16.10"
-        compile 'com.google.code.gson:gson:[2,3)'
-
         testCompile project(':testutils')
     }
 
@@ -34,5 +32,6 @@ project(':testutils') {
         compile group: 'org.testng', name: 'testng', version: '6.9.13.6'
         compile "com.github.tomakehurst:wiremock:2.4.1"
         compile "org.mockito:mockito-core:2.+"
+        compile 'com.google.code.gson:gson:[2,3)'
     }
 }

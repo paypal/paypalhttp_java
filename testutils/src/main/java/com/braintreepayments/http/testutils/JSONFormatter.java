@@ -1,4 +1,4 @@
-package com.braintreepayments.http.internal;
+package com.braintreepayments.http.testutils;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
