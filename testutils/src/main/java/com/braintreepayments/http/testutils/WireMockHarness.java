@@ -29,17 +29,16 @@ public class WireMockHarness {
 		WireMock.configureFor(host(), PORT);
 	}
 
-	protected int port() {
-		return PORT;
-	}
-
-	protected String host() { return "localhost"; }
-
 	@AfterMethod
 	public void teardown() {
 		wireMockServer.stop();
 	}
 
+	protected int port() {
+		return PORT;
+	}
+
+	protected String host() { return "localhost"; }
 
 	protected void stub(String path,
 						String verb,
@@ -54,16 +53,21 @@ public class WireMockHarness {
 		UrlPathPattern pattern = urlPathEqualTo(path);
 		verb = verb.toUpperCase();
 
-		if (verb.equals("GET")) {
-			mappingBuilder = WireMock.get(pattern);
-		} else if (verb.equals("POST")) {
-			mappingBuilder = WireMock.post(pattern);
-		} else if (verb.equals("PUT")) {
-			mappingBuilder = WireMock.put(pattern);
-		} else if (verb.equals("DELETE")) {
-			mappingBuilder = WireMock.delete(pattern);
-		} else {
-			throw new RuntimeException("Invalid or no verb passed in request");
+		switch (verb) {
+			case "GET":
+				mappingBuilder = WireMock.get(pattern);
+				break;
+			case "POST":
+				mappingBuilder = WireMock.post(pattern);
+				break;
+			case "PUT":
+				mappingBuilder = WireMock.put(pattern);
+				break;
+			case "DELETE":
+				mappingBuilder = WireMock.delete(pattern);
+				break;
+			default:
+				throw new RuntimeException("Invalid or no verb passed in request");
 		}
 
 		for (String headerKey : headers.keySet()) {
