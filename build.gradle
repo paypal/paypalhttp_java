@@ -2,7 +2,7 @@ allprojects {
     apply plugin: 'java'
 
     group 'com.braintreepayments'
-    version '2.0'
+    version '1.0'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -13,7 +13,7 @@ allprojects {
 
 }
 
-project(':core') {
+project(':braintreehttp') {
     dependencies {
         compileOnly "org.projectlombok:lombok:1.16.10"
         testCompile project(':testutils')
@@ -30,7 +30,7 @@ project(':core') {
 project(':testutils') {
     dependencies {
         compile group: 'org.testng', name: 'testng', version: '6.9.13.6'
-        compile "com.github.tomakehurst:wiremock:2.4.1"
+        compile 'com.github.tomakehurst:wiremock:2.4.1'
         compile "org.mockito:mockito-core:2.+"
         compile 'com.google.code.gson:gson:[2,3)'
     }
