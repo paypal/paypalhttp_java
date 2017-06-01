@@ -1,6 +1,6 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.exceptions.APIException;
+import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
@@ -353,7 +353,7 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     @DataProvider(name = "getErrorCodesWithException")
     public Object[][] getErrorCodesWithException() {
         return new Object[][]{
-                {HTTP_UNAUTHORIZED, APIException.class},
+                {HTTP_UNAUTHORIZED, HttpException.class},
         };
     }
 

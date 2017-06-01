@@ -1,6 +1,6 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.exceptions.APIException;
+import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 
 import javax.net.ssl.HttpsURLConnection;
@@ -159,7 +159,7 @@ public abstract class BaseHttpClient {
 					.build();
 		} else {
 			responseBody = readStream(connection.getErrorStream(), gzip);
-			throw new APIException(responseBody, statusCode, responseHeaders);
+			throw new HttpException(responseBody, statusCode, responseHeaders);
 		}
 	}
 
