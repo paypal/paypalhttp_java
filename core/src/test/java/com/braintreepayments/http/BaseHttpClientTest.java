@@ -1,8 +1,8 @@
 package com.braintreepayments.http;
 
 import com.braintreepayments.http.exceptions.APIException;
-import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.internal.TLSSocketFactory;
+import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
@@ -14,7 +14,8 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -34,8 +35,14 @@ import static org.testng.AssertJUnit.assertFalse;
 public class BaseHttpClientTest extends BasicWireMockHarness {
 
     private BaseHttpClient client = null;
+    private Environment httpsEnvironment = () -> "https://localhost";
 
     private static class JsonHttpClient extends BaseHttpClient {
+
+		public JsonHttpClient(Environment environment) {
+			super(environment);
+		}
+
 		@Override
 		protected String serializeRequestBody(HttpRequest request) {
 			return JSONFormatter.toJSON(request.requestBody());
@@ -50,7 +57,7 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     @BeforeMethod
     public void setup() {
     	super.setup();
-        client = new JsonHttpClient();
+        client = new JsonHttpClient(environment());
     }
 
     @Test(dataProvider = "getErrorCodesWithException")
@@ -104,6 +111,16 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     }
 
     @Test
+	public void testHttpClient_execute_setsPathFromRequest() throws IOException {
+    	HttpRequest<String> request = simpleRequest()
+				.path("/somepath/to/a/rest/resource");
+    	stub(request, null);
+
+    	client.execute(request);
+    	verify(getRequestedFor(urlEqualTo("/somepath/to/a/rest/resource")));
+	}
+
+    @Test
     public void testHttpClient_setUserAgent_setsUserAgentInRequest() throws IOException {
         client.setUserAgent("Test User Agent");
         HttpRequest<String> request = simpleRequest();
@@ -125,23 +142,25 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     @Test(expectedExceptions = IOException.class, expectedExceptionsMessageRegExp = "SSLSocketFactory was not set or failed to initialize")
     public void testHttpClient_execute_postsErrorForHttpsRequestsWhenSSLSocketFactoryIsNull()
             throws InterruptedException, IOException {
-        client.setSSLSocketFactory(null);
+        client = new JsonHttpClient(httpsEnvironment);
+		client.setSSLSocketFactory(null);
 
-        HttpRequest<String> request = simpleRequest()
-				.baseUrl("https://example.com");
+        HttpRequest<String> request = simpleRequest();
 
 		client.execute(request);
     }
 
     @Test
     public void testHttpClient_getConnection_usesSSLSocketFactory() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
+    	client = new JsonHttpClient(httpsEnvironment);
+
         SSLSocketFactory sslSocketFactory = mock(SSLSocketFactory.class);
 		client.setSSLSocketFactory(sslSocketFactory);
 
-        HttpRequest<String> request = simpleRequest()
-				.baseUrl("https://example.com");
+        HttpRequest<String> request = simpleRequest();
         HttpURLConnection connection = client.getConnection(request);
 
+        assertTrue(connection instanceof HttpsURLConnection);
         assertEquals(sslSocketFactory, ((HttpsURLConnection) connection).getSSLSocketFactory());
     }
 
@@ -246,7 +265,7 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     }
 
     @Test
-	public void testDefaultHttpClient_execute_setsCommonHeaders() throws IOException {
+	public void testHttpClient_execute_setsCommonHeaders() throws IOException {
 	    HttpRequest<String> request = simpleRequest();
 		stub(request, null);
 
@@ -255,7 +274,7 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     }
 
     @Test
-    public void testDefaultHttpClient_execute_doesNotSetCommonHeadersIfPresent() throws IOException {
+    public void testHttpClient_execute_doesNotSetCommonHeadersIfPresent() throws IOException {
         HttpRequest<String> request = simpleRequest();
         request.header(USER_AGENT, "Custom User Agent");
 
@@ -267,7 +286,7 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     }
 
     @Test
-	public void testDefaultHttpClient_addInjector_usesCustomInjectors() throws IOException {
+	public void testHttpClient_addInjector_usesCustomInjectors() throws IOException {
     	client.addInjector(request -> {
 			request.header("Idempotency-Id", "abcd-uuid");
 		});
@@ -281,23 +300,23 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
 	}
 
 	@Test
-	public void testDefaultHttpClient_addInjector_withNull_doestNotAddNullInjector() {
+	public void testHttpClient_addInjector_withNull_doestNotAddNullInjector() {
 		client.addInjector(null);
 		assertEquals(1, client.mInjectors.size());
 	}
 
     @Test
-    public void testDefaultHttpClient_applyHeadersFromRequest_SetsHeaders() throws IOException {
+    public void testHttpClient_applyHeadersFromRequest_SetsHeaders() throws IOException {
         HttpRequest<String> request = simpleRequest();
         request.header(USER_AGENT, "Custom User Agent");
-        HttpURLConnection connection = (HttpURLConnection) new URL(request.url()).openConnection();
+        HttpURLConnection connection = (HttpURLConnection) new URL(environment().baseUrl()).openConnection();
 
         client.applyHeadersFromRequest(request, connection);
         assertEquals(connection.getRequestProperty(USER_AGENT.toString()), "Custom User Agent");
     }
 
     @Test
-    public void testDefaultHttpClient_parseResponseHeaders_returnsParsedHeaders() throws IOException {
+    public void testHttpClient_parseResponseHeaders_returnsParsedHeaders() throws IOException {
         HttpURLConnection connection = mock(HttpURLConnection.class);
         when(connection.getHeaderField(anyInt())).thenReturn("value");
         when(connection.getHeaderFieldKey(anyInt())).thenReturn("key");
@@ -339,7 +358,6 @@ public class BaseHttpClientTest extends BasicWireMockHarness {
     }
 
     private HttpRequest<String> simpleRequest() {
-    	return new HttpRequest<>("/", "GET", String.class)
-				.baseUrl(environment().baseUrl());
+    	return new HttpRequest<>("/", "GET", String.class);
 	}
 }

@@ -25,14 +25,16 @@ public abstract class BaseHttpClient {
 	private String mUserAgent;
 	private int mConnectTimeout;
 	private int mReadTimeout;
+	private Environment mEnvironment;
 
 	List<Injector> mInjectors;
 
-	public BaseHttpClient() {
+	public BaseHttpClient(Environment environment) {
 		mReadTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
 		mConnectTimeout = mReadTimeout;
 		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
 		mInjectors = new ArrayList<>();
+		mEnvironment = environment;
 		addInjector(this::injectStandardHeaders);
 
 		try {
@@ -107,7 +109,7 @@ public abstract class BaseHttpClient {
 	}
 
 	HttpURLConnection getConnection(HttpRequest request) throws IOException {
-		HttpURLConnection connection = (HttpURLConnection) new URL(request.url()).openConnection();
+		HttpURLConnection connection = (HttpURLConnection) new URL(mEnvironment.baseUrl() + request.path()).openConnection();
 		applyHeadersFromRequest(request, connection);
 
 		if (connection instanceof HttpsURLConnection) {

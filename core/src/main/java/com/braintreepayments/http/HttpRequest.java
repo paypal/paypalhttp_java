@@ -20,7 +20,6 @@ public class HttpRequest<T> {
 		this.responseClass = responseClass;
 	}
 
-	private String baseUrl;
 	private String path;
 	private String verb;
 	private Object requestBody;
@@ -37,10 +36,6 @@ public class HttpRequest<T> {
 	public HttpRequest<T> header(String header, String value) {
 		headers.header(header, value);
 		return this;
-	}
-
-	public String url() {
-		return baseUrl + path;
 	}
 
 	public void basicAuthorization(String publicKey, String privateKey) {
