@@ -32,12 +32,12 @@ import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
-public class BaseHttpClientTest extends BasicWireMockHarness {
+public class HttpClientTest extends BasicWireMockHarness {
 
-    private BaseHttpClient client = null;
+    private HttpClient client = null;
     private Environment httpsEnvironment = () -> "https://localhost";
 
-    private static class JsonHttpClient extends BaseHttpClient {
+    private static class JsonHttpClient extends HttpClient {
 
 		public JsonHttpClient(Environment environment) {
 			super(environment);

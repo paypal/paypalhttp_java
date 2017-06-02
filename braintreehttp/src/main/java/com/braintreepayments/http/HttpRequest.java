@@ -7,8 +7,6 @@ import lombok.Setter;
 import lombok.experimental.Accessors;
 import lombok.experimental.NonFinal;
 
-import java.util.Base64;
-
 @Data()
 @NonFinal
 @Accessors(chain=true, fluent = true)
@@ -36,10 +34,5 @@ public class HttpRequest<T> {
 	public HttpRequest<T> header(String header, String value) {
 		headers.header(header, value);
 		return this;
-	}
-
-	public void basicAuthorization(String publicKey, String privateKey) {
-		String auth = new String(Base64.getEncoder().encode((publicKey + ":" + privateKey).getBytes()));
-		headers.headerIfNotPresent("Authorization", "Basic " + auth);
 	}
 }

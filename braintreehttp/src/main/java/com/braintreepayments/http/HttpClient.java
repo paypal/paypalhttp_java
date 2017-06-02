@@ -19,7 +19,7 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public abstract class BaseHttpClient {
+public abstract class HttpClient {
 
 	private SSLSocketFactory mSSLSocketFactory;
 	private String mUserAgent;
@@ -29,7 +29,7 @@ public abstract class BaseHttpClient {
 
 	List<Injector> mInjectors;
 
-	public BaseHttpClient(Environment environment) {
+	public HttpClient(Environment environment) {
 		mReadTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
 		mConnectTimeout = mReadTimeout;
 		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
@@ -63,6 +63,8 @@ public abstract class BaseHttpClient {
 	 * Override this method in a custom subclass to use a User Agent.
 	 */
 	protected String getUserAgent() { return mUserAgent; }
+
+	protected Environment getEnvironment() { return mEnvironment; }
 
 	public void setSSLSocketFactory(SSLSocketFactory factory) { mSSLSocketFactory = factory; }
 
