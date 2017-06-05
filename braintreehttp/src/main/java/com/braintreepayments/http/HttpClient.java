@@ -80,7 +80,7 @@ public abstract class HttpClient {
 		}
 	}
 
-	protected abstract String serializeRequest(HttpRequest request);
+	protected abstract String serializeRequest(HttpRequest request) throws IOException;
 
 	protected abstract <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws UnsupportedEncodingException;
 
@@ -94,7 +94,7 @@ public abstract class HttpClient {
 			connection = getConnection(request);
 			if (request.requestBody() != null) {
 				connection.setDoOutput(true);
-				String data = null;
+				String data;
 				if (request.requestBody() instanceof String) {
 					data = (String) request.requestBody();
 				} else {
@@ -161,11 +161,13 @@ public abstract class HttpClient {
 		if (statusCode >= HTTP_OK && statusCode <= HTTP_PARTIAL) {
 			responseBody = readStream(connection.getInputStream(), gzip);
 
-			T deserializedResponse;
-			if (responseClass.isAssignableFrom(responseBody.getClass())) {
-				deserializedResponse = (T) responseBody;
-			} else {
-				deserializedResponse = deserializeResponse(responseBody, responseClass, responseHeaders);
+			T deserializedResponse = null;
+			if (responseBody.length() > 0) {
+				if (responseClass.isAssignableFrom(responseBody.getClass())) {
+					deserializedResponse = (T) responseBody;
+				} else {
+					deserializedResponse = deserializeResponse(responseBody, responseClass, responseHeaders);
+				}
 			}
 
 			return HttpResponse.<T>builder()
