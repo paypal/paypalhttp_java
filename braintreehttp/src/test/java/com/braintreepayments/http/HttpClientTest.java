@@ -2,10 +2,11 @@ package com.braintreepayments.http;
 
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
-import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
+import com.google.gson.Gson;
+import com.google.gson.annotations.SerializedName;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -13,6 +14,7 @@ import org.testng.annotations.Test;
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -44,13 +46,18 @@ public class HttpClientTest extends BasicWireMockHarness {
 		}
 
 		@Override
-		protected String serializeRequestBody(HttpRequest request) {
-			return JSONFormatter.toJSON(request.requestBody());
+		protected String serializeRequest(HttpRequest request) {
+			return new Gson().toJson(request.requestBody());
 		}
 
 		@Override
-		protected <T> T parseResponseBody(String responseBody, Class<T> responseClass) {
-			return JSONFormatter.fromJSON(responseBody, responseClass);
+		protected <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws UnsupportedEncodingException {
+			String contentType = headers.header("Content-Type");
+			if (contentType.equals("application/json")) {
+				return new Gson().fromJson(responseBody, responseClass);
+			} else {
+				throw new UnsupportedEncodingException("Unsupported Content-Type: " + contentType);
+			}
 		}
 	}
 
@@ -329,6 +336,43 @@ public class HttpClientTest extends BasicWireMockHarness {
         assertEquals("value", actualResponse.header("key"));
     }
 
+    @Test
+	public void testHttpClient_doesNotManuallyDeserializeIfResponseTypeIsString() throws IOException {
+    	HttpRequest<String> request = simpleRequest();
+    	HttpResponse<String> response = HttpResponse.<String>builder()
+				.statusCode(200)
+				.result("Here's the response")
+				.build();
+
+    	stub(request, response);
+
+    	HttpResponse<String> actualResponse = client.execute(request);
+    	assertEquals(200, actualResponse.statusCode());
+		assertEquals("Here's the response", actualResponse.result());
+	}
+
+	@Test
+	public void testHttpClient_callsDeserializeIfResponseTypeIsNotString() throws IOException {
+		HttpRequest<SampleObject> request = new HttpRequest<>("/", "POST", SampleObject.class);
+
+		SampleObject responsebody = new SampleObject();
+		responsebody.name = "Brian Tree";
+		responsebody.age = 10;
+
+		HttpResponse<SampleObject> response = HttpResponse.<SampleObject>builder()
+				.headers(new Headers().header("Content-Type", "application/json"))
+				.statusCode(201)
+				.result(responsebody)
+				.build();
+
+		stub(request, response);
+
+		HttpResponse<SampleObject> actualResponse = client.execute(request);
+		assertEquals(201, actualResponse.statusCode());
+		assertEquals("Brian Tree", actualResponse.result().name);
+		assertEquals(10, actualResponse.result().age);
+	}
+
 	@DataProvider(name = "getVerbs")
     public Object[][] getVerbs() {
         return new Object[][]{
@@ -359,5 +403,14 @@ public class HttpClientTest extends BasicWireMockHarness {
 
     private HttpRequest<String> simpleRequest() {
     	return new HttpRequest<>("/", "GET", String.class);
+	}
+
+	private class SampleObject {
+
+    	@SerializedName("name")
+    	public String name;
+
+		@SerializedName("age")
+    	public int age;
 	}
 }

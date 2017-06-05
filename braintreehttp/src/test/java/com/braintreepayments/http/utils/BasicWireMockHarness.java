@@ -4,8 +4,8 @@ import com.braintreepayments.http.Environment;
 import com.braintreepayments.http.Headers;
 import com.braintreepayments.http.HttpRequest;
 import com.braintreepayments.http.HttpResponse;
-import com.braintreepayments.http.testutils.JSONFormatter;
 import com.braintreepayments.http.testutils.WireMockHarness;
+import com.google.gson.Gson;
 import org.testng.annotations.BeforeMethod;
 
 import java.lang.reflect.Field;
@@ -32,7 +32,11 @@ public class BasicWireMockHarness extends WireMockHarness {
 		Map<String, String> headers = translateHeaders(request.headers());
 		String requestBody = null;
 		if (request.requestBody() != null) {
-			requestBody = JSONFormatter.toJSON(request.requestBody());
+			if (request.requestBody() instanceof String) {
+				requestBody = (String) request.requestBody();
+			} else {
+				requestBody = new Gson().toJson(request.requestBody());
+			}
 		}
 
 		String responseBody = null;
@@ -42,7 +46,7 @@ public class BasicWireMockHarness extends WireMockHarness {
 			if (response.result() instanceof String) {
 				responseBody = (String) response.result();
 			} else {
-				responseBody = JSONFormatter.toJSON(response.result());
+				responseBody = new Gson().toJson(response.result());
 			}
 			statusCode = response.statusCode();
 			responseHeaders = translateHeaders(response.headers());

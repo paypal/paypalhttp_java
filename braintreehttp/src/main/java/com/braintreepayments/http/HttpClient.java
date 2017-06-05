@@ -80,9 +80,9 @@ public abstract class HttpClient {
 		}
 	}
 
-	protected abstract String serializeRequestBody(HttpRequest request);
+	protected abstract String serializeRequest(HttpRequest request);
 
-	protected abstract <T> T parseResponseBody(String responseBody, Class<T> responseClass);
+	protected abstract <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws UnsupportedEncodingException;
 
 	public <T> HttpResponse<T> execute(HttpRequest<T> request) throws IOException {
 		for (Injector injector : mInjectors) {
@@ -94,7 +94,13 @@ public abstract class HttpClient {
 			connection = getConnection(request);
 			if (request.requestBody() != null) {
 				connection.setDoOutput(true);
-				writeOutputStream(connection.getOutputStream(), serializeRequestBody(request));
+				String data = null;
+				if (request.requestBody() instanceof String) {
+					data = (String) request.requestBody();
+				} else {
+					data = serializeRequest(request);
+				}
+				writeOutputStream(connection.getOutputStream(), data);
 			}
 			return parseResponse(connection, request.responseClass());
 		} finally {
@@ -145,7 +151,7 @@ public abstract class HttpClient {
 		return headers;
 	}
 
-	<T> HttpResponse<T> parseResponse(HttpURLConnection connection, Class<T> responseClass) throws IOException {
+	private <T> HttpResponse<T> parseResponse(HttpURLConnection connection, Class<T> responseClass) throws IOException {
 		boolean gzip = "gzip".equals(connection.getContentEncoding());
 
 		Headers responseHeaders = parseResponseHeaders(connection);
@@ -154,10 +160,18 @@ public abstract class HttpClient {
 		statusCode = connection.getResponseCode();
 		if (statusCode >= HTTP_OK && statusCode <= HTTP_PARTIAL) {
 			responseBody = readStream(connection.getInputStream(), gzip);
+
+			T deserializedResponse;
+			if (responseClass.isAssignableFrom(responseBody.getClass())) {
+				deserializedResponse = (T) responseBody;
+			} else {
+				deserializedResponse = deserializeResponse(responseBody, responseClass, responseHeaders);
+			}
+
 			return HttpResponse.<T>builder()
 					.headers(responseHeaders)
 					.statusCode(statusCode)
-					.result(parseResponseBody(responseBody, responseClass))
+					.result(deserializedResponse)
 					.build();
 		} else {
 			responseBody = readStream(connection.getErrorStream(), gzip);
