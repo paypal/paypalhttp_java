@@ -20,7 +20,7 @@ public class HttpRequest<T> {
 
 	private String path;
 	private String verb;
-	private Object requestBody;
+	private Object body;
 
 	@Getter
 	@Setter(AccessLevel.NONE)

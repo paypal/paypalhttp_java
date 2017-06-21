@@ -92,11 +92,11 @@ public abstract class HttpClient {
 		HttpURLConnection connection = null;
 		try {
 			connection = getConnection(request);
-			if (request.requestBody() != null) {
+			if (request.body() != null) {
 				connection.setDoOutput(true);
 				String data;
-				if (request.requestBody() instanceof String) {
-					data = (String) request.requestBody();
+				if (request.body() instanceof String) {
+					data = (String) request.body();
 				} else {
 					data = serializeRequest(request);
 				}

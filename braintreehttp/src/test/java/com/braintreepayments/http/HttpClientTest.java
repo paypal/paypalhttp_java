@@ -47,7 +47,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 		@Override
 		protected String serializeRequest(HttpRequest request) {
-			return new Gson().toJson(request.requestBody());
+			return new Gson().toJson(request.body());
 		}
 
 		@Override
@@ -252,7 +252,7 @@ public class HttpClientTest extends BasicWireMockHarness {
     public void testHttpClient_execute_writesDataFromRequestIfPresent() throws IOException {
         HttpRequest<String> request = simpleRequest()
 				.verb("POST")
-                .requestBody("some data");
+                .body("some data");
         stub(request, null);
 
         client.execute(request);

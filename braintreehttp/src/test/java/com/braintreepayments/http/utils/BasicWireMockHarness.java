@@ -30,12 +30,12 @@ public class BasicWireMockHarness extends WireMockHarness {
 		String path = request.path();
 		String verb = request.verb();
 		Map<String, String> headers = translateHeaders(request.headers());
-		String requestBody = null;
-		if (request.requestBody() != null) {
-			if (request.requestBody() instanceof String) {
-				requestBody = (String) request.requestBody();
+		String body = null;
+		if (request.body() != null) {
+			if (request.body() instanceof String) {
+				body = (String) request.body();
 			} else {
-				requestBody = new Gson().toJson(request.requestBody());
+				body = new Gson().toJson(request.body());
 			}
 		}
 
@@ -52,7 +52,7 @@ public class BasicWireMockHarness extends WireMockHarness {
 			responseHeaders = translateHeaders(response.headers());
 		}
 
-		super.stub(path, verb, requestBody, headers, responseBody, statusCode, responseHeaders);
+		super.stub(path, verb, body, headers, responseBody, statusCode, responseHeaders);
 	}
 
 	@SuppressWarnings("unchecked")
