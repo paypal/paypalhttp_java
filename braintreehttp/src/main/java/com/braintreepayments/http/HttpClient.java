@@ -144,8 +144,8 @@ public abstract class HttpClient {
 
 	Headers parseResponseHeaders(URLConnection connection) {
 		Headers headers = new Headers();
-		for (int i = 0; i < connection.getHeaderFields().size(); i++) {
-			headers.header(connection.getHeaderFieldKey(i), connection.getHeaderField(i));
+		for (String key : connection.getHeaderFields().keySet()) {
+			headers.header(key, connection.getHeaderField(key));
 		}
 
 		return headers;
