@@ -66,6 +66,9 @@ public class WireMockHarness {
 			case "DELETE":
 				mappingBuilder = WireMock.delete(pattern);
 				break;
+			case "PATCH":
+				mappingBuilder = WireMock.patch(pattern);
+				break;
 			default:
 				throw new RuntimeException("Invalid or no verb passed in request");
 		}

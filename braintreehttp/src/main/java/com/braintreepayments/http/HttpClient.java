@@ -7,6 +7,7 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
+import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
@@ -130,7 +131,17 @@ public abstract class HttpClient {
 
 		connection.setReadTimeout(getReadTimeout());
 		connection.setConnectTimeout(getConnectTimeout());
-		connection.setRequestMethod(request.verb().toUpperCase());
+
+		// Why we do this whacky thing
+		if (request.verb().equals("PATCH")) {
+			try {
+				Field methodField = connection.getClass().getSuperclass().getDeclaredField("method");
+				methodField.setAccessible(true);
+				methodField.set(connection, "PATCH");
+			} catch (NoSuchFieldException | IllegalAccessException ignored) {}
+		} else {
+			connection.setRequestMethod(request.verb().toUpperCase());
+		}
 
 		return connection;
 	}

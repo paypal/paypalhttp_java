@@ -16,7 +16,9 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.util.*;
 
@@ -375,6 +377,38 @@ public class HttpClientTest extends BasicWireMockHarness {
 		assertEquals(201, actualResponse.statusCode());
 		assertEquals("Brian Tree", actualResponse.result().name);
 		assertEquals(10, actualResponse.result().age);
+	}
+
+	@Test
+	public void testHttpClient_HttpClientSupportPatchVerb() throws IOException {
+		HttpRequest<String> request = simpleRequest();
+		request.verb("PATCH");
+
+		HttpResponse<String> response = HttpResponse.<String>builder()
+						.headers(new Headers().header("Content-Type", "application/json"))
+						.statusCode(200)
+						.build();
+
+		stub(request, response);
+
+		HttpResponse<String> actual = client.execute(request);
+		assertEquals(200, actual.statusCode());
+	}
+
+	@Test
+	public void testHttpClient_HttpClientWithHttpsURLConnectionSupportPatchVerb() throws IOException {
+		client = new JsonHttpClient(httpsEnvironment);
+
+		HttpRequest<String> request = simpleRequest();
+		request.verb("PATCH");
+
+		try {
+			client.execute(request);
+		} catch (IOException e) {
+			if (e instanceof ProtocolException || !(e instanceof ConnectException)) {
+				fail(e.getMessage());
+			}
+		}
 	}
 
 	@DataProvider(name = "getVerbs")
