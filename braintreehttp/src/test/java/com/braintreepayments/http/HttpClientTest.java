@@ -16,9 +16,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
-import java.net.ConnectException;
 import java.net.HttpURLConnection;
-import java.net.ProtocolException;
 import java.net.URL;
 import java.util.*;
 
@@ -397,17 +395,16 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 	@Test
 	public void testHttpClient_HttpClientWithHttpsURLConnectionSupportPatchVerb() throws IOException {
-		client = new JsonHttpClient(httpsEnvironment);
+		client = new JsonHttpClient(() -> "https://google.com");
 
 		HttpRequest<String> request = simpleRequest();
 		request.verb("PATCH");
 
 		try {
 			client.execute(request);
-		} catch (IOException e) {
-			if (e instanceof ProtocolException || !(e instanceof ConnectException)) {
-				fail(e.getMessage());
-			}
+			fail("client.execute() with patch request did not throw, when we expected it to");
+		} catch(HttpException exception) {
+			assertTrue(exception.getStatusCode() >= 300);
 		}
 	}
 

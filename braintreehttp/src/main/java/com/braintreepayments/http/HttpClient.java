@@ -9,6 +9,7 @@ import javax.net.ssl.SSLSocketFactory;
 import java.io.*;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
+import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
@@ -132,18 +133,43 @@ public abstract class HttpClient {
 		connection.setReadTimeout(getReadTimeout());
 		connection.setConnectTimeout(getConnectTimeout());
 
-		// Why we do this whacky thing
-		if (request.verb().equals("PATCH")) {
-			try {
-				Field methodField = connection.getClass().getSuperclass().getDeclaredField("method");
-				methodField.setAccessible(true);
-				methodField.set(connection, "PATCH");
-			} catch (NoSuchFieldException | IllegalAccessException ignored) {}
-		} else {
-			connection.setRequestMethod(request.verb().toUpperCase());
-		}
+		setRequestVerb(request.verb(), connection);
 
 		return connection;
+	}
+
+	/**
+	 * Workaround for a bug in {@code HttpURLConnection.setRequestMethod(String)}
+	 * The implementation of Sun/Oracle is throwing a {@code ProtocolException}
+	 * when the method is other than the HTTP/1.1 default methods. So to use {@code PATCH}
+	 * and others, we must apply this workaround.
+	 *
+	 * See issue https://bugs.openjdk.java.net/browse/JDK-7016595
+	 */
+	private void setRequestVerb(String verb, HttpURLConnection connection) {
+		try {
+			connection.setRequestMethod(verb.toUpperCase());
+		} catch (ProtocolException ignored) {
+			try {
+				Field delegateField = connection.getClass().getDeclaredField("delegate");
+				delegateField.setAccessible(true);
+				HttpURLConnection delegateConnection = (HttpURLConnection) delegateField.get(connection);
+
+				setRequestVerb(verb, delegateConnection);
+			} catch (NoSuchFieldException e) {
+				Field methodField = null;
+				Class connectionClass = connection.getClass();
+				while (methodField == null) {
+					try {
+						methodField = connectionClass.getDeclaredField("method");
+						methodField.setAccessible(true);
+						methodField.set(connection, "PATCH");
+					} catch (IllegalAccessException | NoSuchFieldException _ignored) {
+						connectionClass = connectionClass.getSuperclass();
+					}
+				}
+			} catch (IllegalAccessException ignoredIllegalAccess) {}
+		}
 	}
 
 	private void writeOutputStream(OutputStream outputStream, String data) throws IOException {
