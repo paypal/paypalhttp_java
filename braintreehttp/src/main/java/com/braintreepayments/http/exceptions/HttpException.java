@@ -1,16 +1,21 @@
 package com.braintreepayments.http.exceptions;
 
 import com.braintreepayments.http.Headers;
+import lombok.AccessLevel;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
+import lombok.Setter;
+import lombok.experimental.Accessors;
 
 import java.io.IOException;
 
 @Data
-@EqualsAndHashCode(callSuper = true)
+@Accessors(fluent = true)
 public class HttpException extends IOException {
 
+	@Setter(AccessLevel.NONE)
 	private int statusCode;
+
+	@Setter(AccessLevel.NONE)
 	private Headers headers;
 
 	public HttpException(String message, int statusCode, Headers headers) {

@@ -404,7 +404,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 			client.execute(request);
 			fail("client.execute() with patch request did not throw, when we expected it to");
 		} catch(HttpException exception) {
-			assertTrue(exception.getStatusCode() >= 300);
+			assertTrue(exception.statusCode() >= 300);
 		}
 	}
 
