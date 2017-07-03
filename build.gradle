@@ -1,8 +1,17 @@
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+    dependencies {
+        classpath "io.codearte.gradle.nexus:gradle-nexus-staging-plugin:0.5.3"
+    }
+}
+
 allprojects {
     apply plugin: 'java'
 
     group 'com.braintreepayments'
-    version '1.0'
+    version '2.0'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -11,12 +20,57 @@ allprojects {
         jcenter()
     }
 
+    apply plugin: 'io.codearte.nexus-staging'
+    nexusStaging {
+        packageGroup = "com.braintreepayments"
+    }
+
+    apply plugin: 'maven'
+
+    apply plugin: 'signing'
+    signing {
+        sign configurations.archives
+    }
+
+    def sonatypeUsername = System.properties.containsKey('sonatypeUsername') ? System.properties['sonatypeUsername'] : ''
+    def sonatypePassword = System.properties.containsKey('sonatypePassword') ? System.properties['sonatypePassword'] : ''
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+                snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                }
+
+                pom.project {
+                    developers {
+                        developer {
+                            id 'devs'
+                            name 'Braintree Payments'
+                        }
+                    }
+
+                    licenses {
+                        license {
+                            name 'MIT'
+                            url 'http://opensource.org/licenses/MIT'
+                            distribution 'repo'
+                        }
+                    }
+                }
+            }
+        }
+    }
 }
 
 project(':braintreehttp') {
     dependencies {
         compileOnly "org.projectlombok:lombok:1.16.10"
-        testCompile project(':testutils')
+        testCompile project(':braintreehttp-testutils')
     }
 
     test {
@@ -25,13 +79,76 @@ project(':braintreehttp') {
             outputs.upToDateWhen { false }
         }
     }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.java.srcDirs
+    }
+
+    task javadocsJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives javadocsJar
+        archives sourcesJar
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                pom.project {
+                    name 'braintreehttp'
+                    artifactId 'braintreehttp'
+                    version = "${version}"
+                    groupId = 'com.braintreepayments'
+                    packaging 'jar'
+                    description 'This is Braintree\' generic http library for generated SDKs'
+                }
+            }
+        }
+    }
 }
 
-project(':testutils') {
+project(':braintreehttp-testutils') {
     dependencies {
         compile group: 'org.testng', name: 'testng', version: '6.9.13.6'
         compile 'com.github.tomakehurst:wiremock:2.4.1'
         compile "org.mockito:mockito-core:2.+"
         compile 'com.google.code.gson:gson:[2,3)'
+    }
+
+    task sourcesJar(type: Jar, dependsOn: classes) {
+        classifier = 'sources'
+        from sourceSets.main.java.srcDirs
+    }
+
+    task javadocsJar(type: Jar, dependsOn: javadoc) {
+        classifier = 'javadoc'
+        from javadoc.destinationDir
+    }
+
+    artifacts {
+        archives javadocsJar
+        archives sourcesJar
+    }
+
+    uploadArchives {
+        repositories {
+            mavenDeployer {
+                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                pom.project {
+                    name 'braintreehttp-testutils'
+                    artifactId 'braintreehttp-testutils'
+                    version = "${version}"
+                    groupId = 'com.braintreepayments'
+                    packaging 'jar'
+                    description 'This is Braintree\' generic http library for generated SDKs'
+                }
+            }
+        }
     }
 }
