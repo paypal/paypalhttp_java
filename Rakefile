@@ -1,22 +1,20 @@
 require 'rake'
 
-task :release => [:clean, :build, :test, :release_braintreehttp, :release_braintreehttp_testutils]
+task :default => :test
 
-task :clean do
-  "./gradlew clean"
-end
+task :release => [:build, :test, :release_braintreehttp]
 
 task :build do
-  "./gradlew build"
+  sh "./gradlew clean build"
 end
 
 task :test do
-  "./gradew test"
+  sh "./gradlew clean test"
 end
 
-task :release do
+task :release_braintreehttp do
   sh "./gradlew :braintreehttp:uploadArchives  :braintreehttp-testutils:uploadArchives"
-  sh "./gradlew :braintreehttp:closeRepository :braintreehttp-testutils:closeRepository"
+  sh "./gradlew :braintreehttp:closeRepository"
 
   puts "Sleeping for one minute to allow BraintreeHttp modules to close"
   sleep 60
