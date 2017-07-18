@@ -29,6 +29,7 @@ allprojects {
 
     apply plugin: 'signing'
     signing {
+        required { gradle.taskGraph.hasTask(tasks.uploadArchives) }
         sign configurations.archives
     }
 
@@ -75,6 +76,7 @@ allprojects {
 project(':braintreehttp') {
     dependencies {
         compileOnly "org.projectlombok:lombok:1.16.10"
+        compile 'com.google.code.gson:gson:[2,3)'
         testCompile project(':braintreehttp-testutils')
     }
 

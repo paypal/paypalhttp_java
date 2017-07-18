@@ -18,6 +18,7 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.braintreepayments.http.Headers.CONTENT_TYPE;
@@ -31,6 +32,11 @@ import static org.mockito.Mockito.when;
 import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
+
+class JsonifiableData {
+	public String key = "some_data";
+	public int key2 = 1;
+}
 
 public class HttpClientTest extends BasicWireMockHarness {
 
@@ -407,6 +413,41 @@ public class HttpClientTest extends BasicWireMockHarness {
 			assertTrue(exception.statusCode() >= 300);
 		}
 	}
+
+	@Test
+	public void testHttpClient_HttpClientLoadsFileDataWithoutBodyPresent() throws IOException {
+		HttpRequest<String> request = simpleRequest()
+				.path("/file_upload")
+				.verb("POST")
+				.file(Paths.get("../README.md").toAbsolutePath().toFile());
+
+		stubFor(post(urlEqualTo("/file_upload")));
+
+		client.execute(request);
+
+		verify(postRequestedFor(urlEqualTo("/file_upload"))
+				.withRequestBody(containing("Content-Disposition: form-data; name=\"file\"; filename=\"README.md\"")));
+	}
+
+    @Test
+    public void testHttpClient_HttpClientLoadsFileDataWithBodyPresent() throws IOException {
+		HttpRequest<String> request = simpleRequest()
+                .path("/file_upload")
+				.verb("POST")
+				.body(new JsonifiableData())
+				.file(Paths.get("../README.md").toAbsolutePath().toFile());
+
+		stubFor(post(urlEqualTo("/file_upload")));
+
+		client.execute(request);
+
+		verify(postRequestedFor(urlEqualTo("/file_upload"))
+				.withRequestBody(containing("Content-Disposition: form-data; name=\"file\"; filename=\"README.md\""))
+				.withRequestBody(containing("name=\"key\""))
+				.withRequestBody(containing("\"some_data\""))
+				.withRequestBody(containing("name=\"key2\""))
+				.withRequestBody(containing("1")));
+    }
 
 	@DataProvider(name = "getVerbs")
 	public Object[][] getVerbs() {
