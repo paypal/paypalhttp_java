@@ -15,7 +15,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.io.File;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -408,23 +407,6 @@ public class HttpClientTest extends BasicWireMockHarness {
 			assertTrue(exception.statusCode() >= 300);
 		}
 	}
-
-    @Test
-    public void testHttpClient_HttpClientLoadsFileDataWithBodyPresent() throws IOException {
-        Environment local = () -> "http://localhost:8000";
-
-        HttpRequest<String> request = simpleRequest();
-        request.file(new File("README.md"));
-        request.body("asdf");
-
-        stub(request, null);
-
-        client = new JsonHttpClient(local);
-        client.execute(request);
-
-        // verify(postRequestedFor(urlEqualTo("/"))
-                // .withRequestBody(containing("asdf")));
-    }
 
 	@DataProvider(name = "getVerbs")
 	public Object[][] getVerbs() {

@@ -14,12 +14,8 @@ import java.net.URL;
 import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
-import com.google.gson.Gson;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonElement;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
@@ -32,14 +28,10 @@ public abstract class HttpClient {
 	private int mConnectTimeout;
 	private int mReadTimeout;
 	private Environment mEnvironment;
-	private Gson mGson;
-
-    public static final String LINE_FEED = "\r\n";
 
 	List<Injector> mInjectors;
 
 	public HttpClient(Environment environment) {
-		mGson = new Gson();
 		mReadTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
 		mConnectTimeout = mReadTimeout;
 		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
@@ -94,85 +86,31 @@ public abstract class HttpClient {
 
 	protected abstract <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws UnsupportedEncodingException;
 
-    public <T> HttpResponse<T> execute(HttpRequest<T> request) throws IOException {
-        for (Injector injector : mInjectors) {
-            injector.inject(request);
-        }
+	public <T> HttpResponse<T> execute(HttpRequest<T> request) throws IOException {
+		for (Injector injector : mInjectors) {
+			injector.inject(request);
+		}
 
-        HttpURLConnection connection = null;
-        try {
-            connection = getConnection(request);
-
-            if (request.body() != null || request.file() != null) {
-                String data;
-                connection.setDoOutput(true);
-
-                if (request.file() == null) { // Only body data
-                    if (request.body() instanceof String) {
-                        data = (String) request.body();
-                    } else {
-                        data = serializeRequest(request);
-                    }
-                } else { // A file, and maybe a body
-                    StringWriter writer = new StringWriter();
-                    String boundary = "boundary" + System.currentTimeMillis();
-
-                    String json = this.mGson.toJson(request.body());
-                    JsonObject obj = this.mGson.fromJson(json, JsonElement.class).getAsJsonObject();
-                    for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-                        String key = entry.getKey();
-                        String value;
-                        value = entry.getValue().toString();
-                        addFormField(writer, key, value, boundary);
-                    }
-
-                    addFilePart("file", request.file(), writer, boundary);
-                    writer.append("--" + boundary + "--").append(LINE_FEED);
-                    writer.append(LINE_FEED);
-
-                    data = writer.toString();
-
-                    String contentType = "multipart/form-data; boundary=" + boundary;
-                    connection.setRequestProperty("Content-Type", contentType);
-                }
-
-                writeOutputStream(connection.getOutputStream(), data);
-            }
-
-            return parseResponse(connection, request.responseClass());
-        } finally {
-            if (connection != null) {
-                connection.disconnect();
-            }
-        }
-    }
-
-    private void addFormField(StringWriter writer, String key, String value, String boundary) {
-        writer.append("--" + boundary).append(LINE_FEED);
-        writer.append("Content-Disposition: form-data; name=\"" + key + "\"").append(LINE_FEED);
-        writer.append(LINE_FEED);
-        writer.append(value).append(LINE_FEED);
-    }
-
-    private void addFilePart(String fieldName, File uploadFile, StringWriter writer, String boundary)
-        throws IOException {
-        String filename = uploadFile.getName();
-
-        writer.append("--" + boundary).append(LINE_FEED);
-        writer.append("Content-Disposition: form-data; name=\"" + fieldName + "\"; filename=\"" + filename + "\"").append(LINE_FEED);
-        writer.append("Content-Type: " + URLConnection.guessContentTypeFromName(filename)).append(LINE_FEED);
-        writer.append(LINE_FEED);
-
-        FileInputStream inputStream = new FileInputStream(uploadFile);
-        byte[] buffer = new byte[4096];
-        int bytesRead;
-        while ((bytesRead = inputStream.read(buffer)) != -1) {
-            writer.write(new String(buffer));
-        }
-        inputStream.close();
-
-        writer.append(LINE_FEED);
-    }
+		HttpURLConnection connection = null;
+		try {
+			connection = getConnection(request);
+			if (request.body() != null) {
+				connection.setDoOutput(true);
+				String data;
+				if (request.body() instanceof String) {
+					data = (String) request.body();
+				} else {
+					data = serializeRequest(request);
+				}
+				writeOutputStream(connection.getOutputStream(), data);
+			}
+			return parseResponse(connection, request.responseClass());
+		} finally {
+			if (connection != null) {
+				connection.disconnect();
+			}
+		}
+	}
 
 	void applyHeadersFromRequest(HttpRequest request, URLConnection connection) {
 		for (String key: request.headers()) {

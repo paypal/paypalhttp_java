@@ -1,7 +1,5 @@
 package com.braintreepayments.http;
 
-import java.io.File;
-
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.Getter;
@@ -23,7 +21,6 @@ public class HttpRequest<T> {
 	private String path;
 	private String verb;
 	private Object body;
-    private File file;
 
 	@Getter
 	@Setter(AccessLevel.NONE)
