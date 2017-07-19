@@ -12,8 +12,10 @@ import java.net.HttpURLConnection;
 import java.net.ProtocolException;
 import java.net.URL;
 import java.net.URLConnection;
+import java.nio.channels.Channels;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
 
@@ -28,6 +30,8 @@ public abstract class HttpClient {
 	private int mConnectTimeout;
 	private int mReadTimeout;
 	private Environment mEnvironment;
+
+	public static final String CRLF = "\r\n";
 
 	List<Injector> mInjectors;
 
@@ -94,15 +98,43 @@ public abstract class HttpClient {
 		HttpURLConnection connection = null;
 		try {
 			connection = getConnection(request);
+
 			if (request.body() != null) {
 				connection.setDoOutput(true);
-				String data;
-				if (request.body() instanceof String) {
-					data = (String) request.body();
+
+				String contentType = request.headers().header(Headers.CONTENT_TYPE);
+				if (contentType != null && contentType.startsWith("multipart/")) {
+					if (!(request.body() instanceof Map)) {
+						throw new IOException("Request body must be Map<String, Object> when Content-Type is multipart/*");
+					} else {
+						String boundary = "boundary" + System.currentTimeMillis();
+						contentType = contentType + "; boundary=" + boundary;
+						connection.setRequestProperty(Headers.CONTENT_TYPE, contentType); // Rewrite header with boundary
+
+						Map<String, Object> body = (Map<String, Object>) request.body();
+						for (String key : body.keySet()) {
+							Object value = body.get(key);
+							if (value instanceof File) {
+								addFilePart(connection.getOutputStream(), key, (File) value, boundary);
+							} else {
+								addFormPart(connection.getOutputStream(), key, String.valueOf(value), boundary);
+							}
+						}
+
+						writeOutputStream(connection.getOutputStream(), "--" + boundary + "--");
+						writeOutputStream(connection.getOutputStream(), CRLF);
+						writeOutputStream(connection.getOutputStream(), CRLF);
+					}
 				} else {
-					data = serializeRequest(request);
+					String data;
+					if (request.body() instanceof String) {
+						data = (String) request.body();
+					} else {
+						data = serializeRequest(request);
+					}
+
+					writeOutputStream(connection.getOutputStream(), data);
 				}
-				writeOutputStream(connection.getOutputStream(), data);
 			}
 			return parseResponse(connection, request.responseClass());
 		} finally {
@@ -110,6 +142,37 @@ public abstract class HttpClient {
 				connection.disconnect();
 			}
 		}
+	}
+
+	private void writePartHeader(OutputStream writer, String name, String filename, String boundary) throws IOException {
+		writeOutputStream(writer,"--" + boundary);
+		writeOutputStream(writer, CRLF);
+		writeOutputStream(writer, "Content-Disposition: form-data; name=\"" + name + "\"");
+		if (filename != null) {
+			writeOutputStream(writer, "; filename=\"" + filename + "\"");
+			writeOutputStream(writer, CRLF);
+			writeOutputStream(writer, "Content-Type: " + URLConnection.guessContentTypeFromName(filename));
+		}
+		writeOutputStream(writer, CRLF);
+		writeOutputStream(writer, CRLF);
+	}
+
+	private void addFormPart(OutputStream writer, String key, String value, String boundary) throws IOException {
+		writePartHeader(writer, key, null, boundary);
+
+		writeOutputStream(writer, value);
+		writeOutputStream(writer, CRLF);
+	}
+
+	private void addFilePart(OutputStream writer, String key, File uploadFile, String boundary)
+			throws IOException {
+		String filename = uploadFile.getName();
+		writePartHeader(writer, key, filename, boundary);
+
+		new FileInputStream(uploadFile).getChannel()
+				.transferTo(0, uploadFile.length(), Channels.newChannel(writer));
+
+		writeOutputStream(writer, CRLF);
 	}
 
 	void applyHeadersFromRequest(HttpRequest request, URLConnection connection) {
@@ -173,10 +236,11 @@ public abstract class HttpClient {
 	}
 
 	private void writeOutputStream(OutputStream outputStream, String data) throws IOException {
-		Writer out = new OutputStreamWriter(outputStream, UTF_8);
-		out.write(data, 0, data.length());
-		out.flush();
-		out.close();
+		writeOutputStream(outputStream, data.getBytes());
+	}
+
+	private void writeOutputStream(OutputStream outputStream, byte[] data) throws IOException {
+		outputStream.write(data);
 	}
 
 	Headers parseResponseHeaders(URLConnection connection) {

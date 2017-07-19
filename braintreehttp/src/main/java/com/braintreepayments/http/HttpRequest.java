@@ -1,15 +1,5 @@
 package com.braintreepayments.http;
 
-import lombok.AccessLevel;
-import lombok.Data;
-import lombok.Getter;
-import lombok.Setter;
-import lombok.experimental.Accessors;
-import lombok.experimental.NonFinal;
-
-@Data()
-@NonFinal
-@Accessors(chain=true, fluent = true)
 public class HttpRequest<T> {
 
 	public HttpRequest(String path, String verb, Class<T> responseClass) {
@@ -21,15 +11,43 @@ public class HttpRequest<T> {
 	private String path;
 	private String verb;
 	private Object body;
-
-	@Getter
-	@Setter(AccessLevel.NONE)
 	private Class<T> responseClass;
-
-	@Getter
-	@Setter(AccessLevel.NONE)
 	private Headers headers = new Headers();
 
+	public HttpRequest<T> path(String path) {
+		this.path = path;
+		return this;
+	}
+
+	public HttpRequest<T> verb(String verb) {
+		this.verb = verb;
+		return this;
+	}
+
+	public HttpRequest<T> body(Object body) {
+		this.body = body;
+		return this;
+	}
+
+	public String path() {
+		return this.path;
+	}
+
+	public String verb() {
+		return this.verb;
+	}
+
+	public Object body() {
+		return this.body;
+	}
+
+	public Headers headers() {
+		return this.headers;
+	}
+
+	public Class<T> responseClass() {
+		return this.responseClass;
+	}
 
 	public HttpRequest<T> header(String header, String value) {
 		headers.header(header, value);

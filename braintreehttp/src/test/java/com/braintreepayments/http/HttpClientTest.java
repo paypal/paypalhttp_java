@@ -3,8 +3,10 @@ package com.braintreepayments.http;
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
+import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import com.google.gson.Gson;
 import com.google.gson.annotations.SerializedName;
 import org.testng.annotations.BeforeMethod;
@@ -13,11 +15,15 @@ import org.testng.annotations.Test;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
 import static com.braintreepayments.http.Headers.CONTENT_TYPE;
@@ -251,6 +257,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 		HttpRequest<String> request = simpleRequest()
 						.verb("POST")
 						.body("some data");
+
 		stub(request, null);
 
 		client.execute(request);
@@ -408,6 +415,81 @@ public class HttpClientTest extends BasicWireMockHarness {
 		}
 	}
 
+	@Test
+	public void testHttpClient_HttpClientLoadsFileDataWithoutBodyPresent() throws IOException {
+		String uploadData = new String(fileData("fileupload_test_text.txt"));
+
+		FileUploadRequest request = simpleFileRequest()
+				.file("file_test_text", resource("fileupload_test_text.txt").toFile());
+
+		stubFor(post(urlEqualTo("/file_upload")));
+
+		client.execute(request);
+
+		verify(postRequestedFor(urlEqualTo("/file_upload"))
+				.withHeader("Content-Type", containing("multipart/form-data; boundary=boundary"))
+				.withRequestBody(containing("Content-Disposition: form-data; name=\"file_test_text\"; filename=\"fileupload_test_text.txt\""))
+				.withRequestBody(containing("Content-Type: text/plain"))
+				.withRequestBody(containing(uploadData))
+				.withRequestBody(containing("--boundary")));
+	}
+
+	@Test
+	public void testHttpClient_HttpClientLoadsFileDataWithTextBodyPresent() throws IOException {
+		String uploadData = new String(fileData("fileupload_test_text.txt"));
+
+		FileUploadRequest request = simpleFileRequest()
+				.file("file_test_text", resource("fileupload_test_text.txt").toFile())
+				.formData("some_field_key", "form_field=\"some_field_value\"");
+
+		stubFor(post(urlEqualTo("/file_upload")));
+
+		client.execute(request);
+
+		verify(postRequestedFor(urlEqualTo("/file_upload"))
+				.withHeader("Content-Type", containing("multipart/form-data; boundary=boundary"))
+				.withRequestBody(containing("Content-Disposition: form-data; name=\"file_test_text\"; filename=\"fileupload_test_text.txt\""))
+				.withRequestBody(containing("Content-Type: text/plain"))
+				.withRequestBody(containing(uploadData))
+				.withRequestBody(containing("--boundary"))
+				.withRequestBody(containing("Content-Disposition: form-data; name=\"some_field_key\""))
+				.withRequestBody(containing("form_field=\"some_field_value\"")));
+    }
+
+    @Test
+	public void testHttpClient_HttpClientLoadsFileDataWithBinaryBodyPresnt() throws IOException {
+		FileUploadRequest request = simpleFileRequest()
+				.file("binary_file", resource("fileupload_test_binary.jpg").toFile());
+
+		stubFor(post(urlEqualTo("/file_upload")));
+
+		client.execute(request);
+
+		verify(postRequestedFor(urlEqualTo("/file_upload"))
+				.withHeader("Content-Type", containing("multipart/form-data; boundary=boundary"))
+				.withRequestBody(containing("Content-Disposition: form-data; name=\"binary_file\"; filename=\"fileupload_test_binary.jpg\""))
+				.withRequestBody(containing("Content-Type: image/jpeg")));
+
+		LoggedRequest loggedRequest = WireMock.getAllServeEvents().get(0).getRequest();
+		byte[] imageData = fileData("fileupload_test_binary.jpg");
+		assertTrue(byteArrayContains(loggedRequest.getBody(), imageData));
+	}
+
+	@Test
+	public void testHttpClient_HttpClientThrowsExceptionWithNonMapBody() throws IOException {
+		FileUploadRequest request = simpleFileRequest();
+		request.body(new Object());
+
+		stub(request, null);
+
+		try {
+			client.execute(request);
+			fail("Http client should have thrown for non-Map body");
+		} catch (IOException ioe) {
+			assertEquals("Request body must be Map<String, Object> when Content-Type is multipart/*", ioe.getMessage());
+		}
+	}
+
 	@DataProvider(name = "getVerbs")
 	public Object[][] getVerbs() {
 		return new Object[][]{
@@ -436,6 +518,24 @@ public class HttpClientTest extends BasicWireMockHarness {
 		};
 	}
 
+	private boolean byteArrayContains(byte[] b1, byte[] subba) {
+		for (int i = 0; i < b1.length - subba.length; i++ ) {
+			if (Arrays.equals(Arrays.copyOfRange(b1, i, i + subba.length), subba)) {
+				return true;
+			}
+		}
+
+		return false;
+	}
+
+	private Path resource(String name) {
+		return Paths.get("src/test/resources/" + name).toAbsolutePath();
+	}
+
+	private byte[] fileData(String name) throws IOException {
+		return Files.readAllBytes(resource(name).toAbsolutePath());
+	}
+
 	private HttpRequest<String> simpleRequest() {
 		return new HttpRequest<>("/", "GET", String.class);
 	}
@@ -447,5 +547,32 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 		@SerializedName("age")
 		public int age;
+	}
+
+	private FileUploadRequest simpleFileRequest() {
+		return new FileUploadRequest("/file_upload", "POST", Void.class);
+	}
+
+	private class FileUploadRequest extends HttpRequest<Void> {
+
+		public FileUploadRequest(String path, String verb, Class<Void> responseClass) {
+			super(path, verb, responseClass);
+			header(Headers.CONTENT_TYPE, "multipart/form-data");
+			body(new HashMap<String, Object>());
+		}
+
+		public FileUploadRequest file(String key, File f) {
+			Map<String, Object> existingBody = ((Map<String, Object>) body());
+			existingBody.put(key, f);
+			body(existingBody);
+			return this;
+		}
+
+		public FileUploadRequest formData(String key, String value) {
+			Map<String, Object> existingBody = ((Map<String, Object>) body());
+			existingBody.put(key, value);
+			body(existingBody);
+			return this;
+		}
 	}
 }
