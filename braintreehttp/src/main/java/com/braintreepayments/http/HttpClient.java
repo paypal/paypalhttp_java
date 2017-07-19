@@ -117,21 +117,14 @@ public abstract class HttpClient {
                     StringWriter writer = new StringWriter();
                     String boundary = "boundary" + System.currentTimeMillis();
 
-                    if (request.body() != null) {
-						String json = this.mGson.toJson(request.body());
-						JsonObject obj;
-						try {
-							obj = this.mGson.fromJson(json, JsonElement.class).getAsJsonObject();
-						} catch (IllegalStateException ise) {
-							throw new IllegalStateException("Request body with file must be JSON-ifiable!");
-						}
-						for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
-							String key = entry.getKey();
-							String value;
-							value = entry.getValue().toString();
-							addFormField(writer, key, value, boundary);
-						}
-					}
+                    String json = this.mGson.toJson(request.body());
+                    JsonObject obj = this.mGson.fromJson(json, JsonElement.class).getAsJsonObject();
+                    for (Map.Entry<String, JsonElement> entry : obj.entrySet()) {
+                        String key = entry.getKey();
+                        String value;
+                        value = entry.getValue().toString();
+                        addFormField(writer, key, value, boundary);
+                    }
 
                     addFilePart("file", request.file(), writer, boundary);
                     writer.append("--" + boundary + "--").append(LINE_FEED);
