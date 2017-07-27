@@ -2,13 +2,13 @@ package com.braintreepayments.http;
 
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
+import com.braintreepayments.http.serializer.Deserializable;
+import com.braintreepayments.http.serializer.Serializable;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
 import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-import com.google.gson.Gson;
-import com.google.gson.annotations.SerializedName;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
@@ -17,7 +17,6 @@ import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
 import java.io.File;
 import java.io.IOException;
-import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -43,32 +42,10 @@ public class HttpClientTest extends BasicWireMockHarness {
 	private HttpClient client = null;
 	private Environment httpsEnvironment = () -> "https://localhost";
 
-	private static class JsonHttpClient extends HttpClient {
-
-		public JsonHttpClient(Environment environment) {
-			super(environment);
-		}
-
-		@Override
-		protected String serializeRequest(HttpRequest request) {
-			return new Gson().toJson(request.body());
-		}
-
-		@Override
-		protected <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws UnsupportedEncodingException {
-			String contentType = headers.header("Content-Type");
-			if (contentType.equals("application/json")) {
-				return new Gson().fromJson(responseBody, responseClass);
-			} else {
-				throw new UnsupportedEncodingException("Unsupported Content-Type: " + contentType);
-			}
-		}
-	}
-
 	@BeforeMethod
 	public void setup() {
 		super.setup();
-		client = new JsonHttpClient(environment());
+		client = new HttpClient(environment());
 	}
 
 	@Test(dataProvider = "getErrorCodesWithException")
@@ -153,7 +130,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test(expectedExceptions = IOException.class, expectedExceptionsMessageRegExp = "SSLSocketFactory was not set or failed to initialize")
 	public void testHttpClient_execute_postsErrorForHttpsRequestsWhenSSLSocketFactoryIsNull()
 					throws InterruptedException, IOException {
-		client = new JsonHttpClient(httpsEnvironment);
+		client = new HttpClient(httpsEnvironment);
 		client.setSSLSocketFactory(null);
 
 		HttpRequest<String> request = simpleRequest();
@@ -163,7 +140,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 	@Test
 	public void testHttpClient_getConnection_usesSSLSocketFactory() throws IOException, NoSuchMethodException, InvocationTargetException, IllegalAccessException {
-		client = new JsonHttpClient(httpsEnvironment);
+		client = new HttpClient(httpsEnvironment);
 
 		SSLSocketFactory sslSocketFactory = mock(SSLSocketFactory.class);
 		client.setSSLSocketFactory(sslSocketFactory);
@@ -364,24 +341,24 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 	@Test
 	public void testHttpClient_callsDeserializeIfResponseTypeIsNotString() throws IOException {
-		HttpRequest<SampleObject> request = new HttpRequest<>("/", "POST", SampleObject.class);
+		HttpRequest<Zoo> request = new HttpRequest<>("/", "POST", Zoo.class);
 
-		SampleObject responsebody = new SampleObject();
-		responsebody.name = "Brian Tree";
-		responsebody.age = 10;
+		Zoo zoo = new Zoo();
+		zoo.numberOfAnimals = 10;
+		zoo.name = "Brian Tree";
 
-		HttpResponse<SampleObject> response = HttpResponse.<SampleObject>builder()
+		HttpResponse<Zoo> response = HttpResponse.<Zoo>builder()
 						.headers(new Headers().header("Content-Type", "application/json"))
 						.statusCode(201)
-						.result(responsebody)
+						.result(zoo)
 						.build();
 
 		stub(request, response);
 
-		HttpResponse<SampleObject> actualResponse = client.execute(request);
+		HttpResponse<Zoo> actualResponse = client.execute(request);
 		assertEquals(201, actualResponse.statusCode());
 		assertEquals("Brian Tree", actualResponse.result().name);
-		assertEquals(10, actualResponse.result().age);
+		assertEquals(10, actualResponse.result().numberOfAnimals.intValue());
 	}
 
 	@Test
@@ -402,7 +379,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 	@Test
 	public void testHttpClient_HttpClientWithHttpsURLConnectionSupportPatchVerb() throws IOException {
-		client = new JsonHttpClient(() -> "https://google.com");
+		client = new HttpClient(() -> "https://google.com");
 
 		HttpRequest<String> request = simpleRequest();
 		request.verb("PATCH");
@@ -540,13 +517,34 @@ public class HttpClientTest extends BasicWireMockHarness {
 		return new HttpRequest<>("/", "GET", String.class);
 	}
 
-	private class SampleObject {
+	private class SampleObject implements Serializable, Deserializable {
 
-		@SerializedName("name")
+		public SampleObject() {}
+
 		public String name;
+		public Integer age;
 
-		@SerializedName("age")
-		public int age;
+		@Override
+		public void deserialize(Map<String, Object> fields) {
+			if (fields.containsKey("name")) {
+				name = (String) fields.get("name");
+			}
+
+			if (fields.containsKey("age")) {
+				age = (Integer) fields.get("age");
+			}
+		}
+
+		@Override
+		public void serialize(Map<String, Object> serialized) {
+			if (age != null) {
+				serialized.put("age", age);
+			}
+
+			if (name != null) {
+				serialized.put("name", name);
+			}
+		}
 	}
 
 	private FileUploadRequest simpleFileRequest() {

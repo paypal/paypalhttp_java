@@ -4,8 +4,9 @@ import com.braintreepayments.http.Environment;
 import com.braintreepayments.http.Headers;
 import com.braintreepayments.http.HttpRequest;
 import com.braintreepayments.http.HttpResponse;
+import com.braintreepayments.http.exceptions.JsonSerializeException;
+import com.braintreepayments.http.serializer.Json;
 import com.braintreepayments.http.testutils.WireMockHarness;
-import com.google.gson.Gson;
 import org.testng.annotations.BeforeMethod;
 
 import java.lang.reflect.Field;
@@ -35,7 +36,9 @@ public class BasicWireMockHarness extends WireMockHarness {
 			if (request.body() instanceof String) {
 				body = (String) request.body();
 			} else {
-				body = new Gson().toJson(request.body());
+				try {
+					body = new Json().serialize(request.body());
+				} catch (JsonSerializeException ignored) {}
 			}
 		}
 
@@ -46,7 +49,9 @@ public class BasicWireMockHarness extends WireMockHarness {
 			if (response.result() instanceof String) {
 				responseBody = (String) response.result();
 			} else {
-				responseBody = new Gson().toJson(response.result());
+				try {
+					responseBody = new Json().serialize(response.result());
+				} catch (JsonSerializeException e) {}
 			}
 			statusCode = response.statusCode();
 			responseHeaders = translateHeaders(response.headers());

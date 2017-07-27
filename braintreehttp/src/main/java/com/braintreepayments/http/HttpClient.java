@@ -23,13 +23,14 @@ import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
 import static java.nio.charset.StandardCharsets.UTF_8;
 
-public abstract class HttpClient {
+public class HttpClient {
 
 	private SSLSocketFactory mSSLSocketFactory;
 	private String mUserAgent;
 	private int mConnectTimeout;
 	private int mReadTimeout;
 	private Environment mEnvironment;
+	private Encoder encoder;
 
 	public static final String CRLF = "\r\n";
 
@@ -41,6 +42,7 @@ public abstract class HttpClient {
 		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
 		mInjectors = new ArrayList<>();
 		mEnvironment = environment;
+		encoder = new Encoder();
 		addInjector(this::injectStandardHeaders);
 
 		try {
@@ -86,9 +88,13 @@ public abstract class HttpClient {
 		}
 	}
 
-	protected abstract String serializeRequest(HttpRequest request) throws IOException;
+	protected String serializeRequest(HttpRequest request) throws IOException {
+		return encoder.encode(request);
+	}
 
-	protected abstract <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws UnsupportedEncodingException;
+	protected <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
+		return encoder.decode(responseBody, responseClass, headers);
+	}
 
 	public <T> HttpResponse<T> execute(HttpRequest<T> request) throws IOException {
 		for (Injector injector : mInjectors) {
