@@ -28,22 +28,21 @@ public class Encoder {
 		Serializer serializer = serializers.get(request.headers().header(Headers.CONTENT_TYPE));
 		if (serializer == null) {
 			throw new UnsupportedEncodingException(String.format("Unable to serialize request with Content-Type: %s. Supported encodings are: %s", request.headers().header(Headers.CONTENT_TYPE), supportedEncodings()));
-		} else if (!(request.requestBody() instanceof Serializable)) {
-			throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable", request.requestBody().getClass().getSimpleName()));
+		} else if (request.requestBody() instanceof Serializable || request.requestBody() instanceof List || request.requestBody() instanceof Map) {
+			return serializer.serialize(request.requestBody());
 		}
 
-		return serializer.serialize(request.requestBody());
+		throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable, List, or Map", request.requestBody().getClass().getSimpleName()));
 	}
 
 	public <T> T decode(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
 		Serializer deserializer = serializers.get(headers.header(Headers.CONTENT_TYPE));
 		if (deserializer == null) {
 			throw new UnsupportedEncodingException(String.format("Unable to deserialize response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedDecodings()));
-		} else if (responseClass.isAssignableFrom(Deserializable.class)) {
-			throw new UnsupportedEncodingException(String.format("Destination class %s must implement Deserializable", responseClass.getSimpleName()));
+		} else if (Deserializable.class.isAssignableFrom(responseClass) || Map.class.isAssignableFrom(responseClass)) {
+			return deserializer.deserialize(responseBody, responseClass);
 		}
-
-		return deserializer.deserialize(responseBody, responseClass);
+		throw new UnsupportedEncodingException(String.format("Destination class %s must implement Deserializable or Map", responseClass.getSimpleName()));
 	}
 
 	private List<String> supportedDecodings() {

@@ -4,6 +4,9 @@ import org.testng.annotations.Test;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.testng.Assert.*;
 
@@ -22,7 +25,7 @@ public class EncoderTest {
 			fail("Expected encode to throw IOException");
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Body class Object must implement Serializable");
+			assertEquals(ioe.getMessage(), "Body class Object must implement Serializable, List, or Map");
 		}
 	}
 
@@ -56,6 +59,34 @@ public class EncoderTest {
 	}
 
 	@Test
+	public void testEncoder_encode_list() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "application/json");
+		ArrayList<Zoo> body = new ArrayList();
+		body.add(new Zoo("name", 1, null));
+		request.requestBody(body);
+
+		Encoder encoder = new Encoder();
+
+		String s = encoder.encode(request);
+		assertNotEquals(s, "");
+	}
+
+	@Test
+	public void testEncoder_encode_map() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "application/json");
+		Map<String, Object> body = new HashMap<>();
+		body.put("one", "two");
+		request.requestBody(body);
+
+		Encoder encoder = new Encoder();
+
+		String s = encoder.encode(request);
+		assertEquals(s, "{\"one\":\"two\"}");
+	}
+
+	@Test
 	public void testEncoder_decode_throwsForNonDeserializableBodyType() throws IOException {
 		String response = "{\"name\":\"Brian Tree\"}";
 		Headers headers = new Headers();
@@ -67,7 +98,7 @@ public class EncoderTest {
 			Object o = encoder.decode(response, Object.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Destination class Object must implement Deserializable");
+			assertEquals(ioe.getMessage(), "Destination class Object must implement Deserializable or Map");
 		}
 	}
 

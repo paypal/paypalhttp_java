@@ -14,7 +14,7 @@ import java.util.Map;
 
 import static org.testng.Assert.*;
 
-public class SerializerTest {
+public class JsonTest {
 
     @Test()
 	public void testJson_serializesObjectsToJSON() throws JsonSerializeException {
