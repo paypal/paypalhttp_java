@@ -362,6 +362,26 @@ public class HttpClientTest extends BasicWireMockHarness {
 	}
 
 	@Test
+	public void testHttpClient_doesNotDeserializeIfReturnTypeVoid() throws IOException {
+		HttpRequest<Void> request = new HttpRequest<Void>("/", "POST", Void.class);
+
+		Zoo zoo = new Zoo();
+		zoo.numberOfAnimals = 10;
+		zoo.name = "Brian Tree";
+
+		HttpResponse<Zoo> response = HttpResponse.<Zoo>builder()
+				.headers(new Headers().header("Content-Type", "application/json"))
+				.statusCode(201)
+				.result(zoo)
+				.build();
+
+		stub(request, response);
+
+		HttpResponse<Void> actualResponse = client.execute(request);
+		assertNull(actualResponse.result());
+	}
+
+	@Test
 	public void testHttpClient_HttpClientSupportPatchVerb() throws IOException {
 		HttpRequest<String> request = simpleRequest();
 		request.verb("PATCH");

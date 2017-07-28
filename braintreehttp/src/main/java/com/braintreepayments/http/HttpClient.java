@@ -269,7 +269,7 @@ public class HttpClient {
 			responseBody = readStream(connection.getInputStream(), gzip);
 
 			T deserializedResponse = null;
-			if (responseBody.length() > 0) {
+			if (responseBody.length() > 0 && !Void.class.isAssignableFrom(responseClass)) {
 				if (responseClass.isAssignableFrom(responseBody.getClass())) {
 					deserializedResponse = (T) responseBody;
 				} else {
