@@ -32,12 +32,12 @@ public class BasicWireMockHarness extends WireMockHarness {
 		String verb = request.verb();
 		Map<String, String> headers = translateHeaders(request.headers());
 		String body = null;
-		if (request.body() != null) {
-			if (request.body() instanceof String) {
-				body = (String) request.body();
+		if (request.requestBody() != null) {
+			if (request.requestBody() instanceof String) {
+				body = (String) request.requestBody();
 			} else {
 				try {
-					body = new Json().serialize(request.body());
+					body = new Json().serialize(request.requestBody());
 				} catch (JsonSerializeException ignored) {}
 			}
 		}

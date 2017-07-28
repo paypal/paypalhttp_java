@@ -13,7 +13,7 @@ public class EncoderTest {
 	public void testEncoder_encode_throwsForNonSerializableBodyType() throws UnsupportedEncodingException {
 		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
 		request.header("Content-Type", "application/json");
-		request.body(new Object());
+		request.requestBody(new Object());
 
 		Encoder encoder = new Encoder();
 
@@ -30,7 +30,7 @@ public class EncoderTest {
 	public void testEncoder_encode_throwsForUnsupportedContentType() throws IOException {
 		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
 		request.header("Content-Type", "text/html");
-		request.body(new Zoo());
+		request.requestBody(new Zoo());
 
 		Encoder encoder = new Encoder();
 
@@ -47,7 +47,7 @@ public class EncoderTest {
 	public void testEncoder_encode() throws IOException {
 		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
 		request.header("Content-Type", "application/json");
-		request.body(new Zoo());
+		request.requestBody(new Zoo());
 
 		Encoder encoder = new Encoder();
 
@@ -73,7 +73,7 @@ public class EncoderTest {
 
 	@Test
 	public void testEncoder_decode_throwsForUnsupportedContentType() throws IOException {
-		String response = "<html>\n<body>200</body>\n</html>";
+		String response = "<html>\n<requestBody>200</requestBody>\n</html>";
 		Headers headers = new Headers();
 		headers.header("Content-Type", "text/html");
 

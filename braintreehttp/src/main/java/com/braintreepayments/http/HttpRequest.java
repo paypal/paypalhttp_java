@@ -24,7 +24,7 @@ public class HttpRequest<T> {
 		return this;
 	}
 
-	public HttpRequest<T> body(Object body) {
+	public HttpRequest<T> requestBody(Object body) {
 		this.body = body;
 		return this;
 	}
@@ -37,7 +37,7 @@ public class HttpRequest<T> {
 		return this.verb;
 	}
 
-	public Object body() {
+	public Object requestBody() {
 		return this.body;
 	}
 

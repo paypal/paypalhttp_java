@@ -105,19 +105,19 @@ public class HttpClient {
 		try {
 			connection = getConnection(request);
 
-			if (request.body() != null) {
+			if (request.requestBody() != null) {
 				connection.setDoOutput(true);
 
 				String contentType = request.headers().header(Headers.CONTENT_TYPE);
 				if (contentType != null && contentType.startsWith("multipart/")) {
-					if (!(request.body() instanceof Map)) {
-						throw new IOException("Request body must be Map<String, Object> when Content-Type is multipart/*");
+					if (!(request.requestBody() instanceof Map)) {
+						throw new IOException("Request requestBody must be Map<String, Object> when Content-Type is multipart/*");
 					} else {
 						String boundary = "boundary" + System.currentTimeMillis();
 						contentType = contentType + "; boundary=" + boundary;
 						connection.setRequestProperty(Headers.CONTENT_TYPE, contentType); // Rewrite header with boundary
 
-						Map<String, Object> body = (Map<String, Object>) request.body();
+						Map<String, Object> body = (Map<String, Object>) request.requestBody();
 						for (String key : body.keySet()) {
 							Object value = body.get(key);
 							if (value instanceof File) {
@@ -133,8 +133,8 @@ public class HttpClient {
 					}
 				} else {
 					String data;
-					if (request.body() instanceof String) {
-						data = (String) request.body();
+					if (request.requestBody() instanceof String) {
+						data = (String) request.requestBody();
 					} else {
 						data = serializeRequest(request);
 					}

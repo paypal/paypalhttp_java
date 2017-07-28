@@ -233,7 +233,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 	public void testHttpClient_execute_writesDataFromRequestIfPresent() throws IOException {
 		HttpRequest<String> request = simpleRequest()
 						.verb("POST")
-						.body("some data");
+						.requestBody("some data");
 
 		stub(request, null);
 
@@ -455,15 +455,15 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test
 	public void testHttpClient_HttpClientThrowsExceptionWithNonMapBody() throws IOException {
 		FileUploadRequest request = simpleFileRequest();
-		request.body(new Object());
+		request.requestBody(new Object());
 
 		stub(request, null);
 
 		try {
 			client.execute(request);
-			fail("Http client should have thrown for non-Map body");
+			fail("Http client should have thrown for non-Map requestBody");
 		} catch (IOException ioe) {
-			assertEquals("Request body must be Map<String, Object> when Content-Type is multipart/*", ioe.getMessage());
+			assertEquals("Request requestBody must be Map<String, Object> when Content-Type is multipart/*", ioe.getMessage());
 		}
 	}
 
@@ -556,20 +556,20 @@ public class HttpClientTest extends BasicWireMockHarness {
 		public FileUploadRequest(String path, String verb, Class<Void> responseClass) {
 			super(path, verb, responseClass);
 			header(Headers.CONTENT_TYPE, "multipart/form-data");
-			body(new HashMap<String, Object>());
+			requestBody(new HashMap<String, Object>());
 		}
 
 		public FileUploadRequest file(String key, File f) {
-			Map<String, Object> existingBody = ((Map<String, Object>) body());
+			Map<String, Object> existingBody = ((Map<String, Object>) requestBody());
 			existingBody.put(key, f);
-			body(existingBody);
+			requestBody(existingBody);
 			return this;
 		}
 
 		public FileUploadRequest formData(String key, String value) {
-			Map<String, Object> existingBody = ((Map<String, Object>) body());
+			Map<String, Object> existingBody = ((Map<String, Object>) requestBody());
 			existingBody.put(key, value);
-			body(existingBody);
+			requestBody(existingBody);
 			return this;
 		}
 	}

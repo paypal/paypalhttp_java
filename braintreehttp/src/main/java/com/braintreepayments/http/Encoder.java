@@ -28,11 +28,11 @@ public class Encoder {
 		Serializer serializer = serializers.get(request.headers().header(Headers.CONTENT_TYPE));
 		if (serializer == null) {
 			throw new UnsupportedEncodingException(String.format("Unable to serialize request with Content-Type: %s. Supported encodings are: %s", request.headers().header(Headers.CONTENT_TYPE), supportedEncodings()));
-		} else if (!(request.body() instanceof Serializable)) {
-			throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable", request.body().getClass().getSimpleName()));
+		} else if (!(request.requestBody() instanceof Serializable)) {
+			throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable", request.requestBody().getClass().getSimpleName()));
 		}
 
-		return serializer.serialize(request.body());
+		return serializer.serialize(request.requestBody());
 	}
 
 	public <T> T decode(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
