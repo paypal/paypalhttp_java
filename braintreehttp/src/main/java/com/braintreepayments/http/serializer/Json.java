@@ -202,12 +202,9 @@ public class Json implements Serializer {
 				}
 				default: {
 					// Search to end of value
-					StringBuilder value = new StringBuilder();
-					while (raw[i] != PAIR_DELIMITER && raw[i] != OBJECT_TOKEN_CLOSE) {
-						value.append(raw[i]);
-						i++;
-					}
-					deserialized.put(key, deserializeSimple(value.toString().trim()));
+					SearchResult result = extractNextToken(raw, i);
+					deserialized.put(key, deserializeSimple(result.token));
+					i = result.endIndex;
 					break;
 				}
 			}
@@ -223,6 +220,8 @@ public class Json implements Serializer {
     }
 
 	private Object deserializeSimple(String s) throws JsonParseException {
+		s = s.trim();
+
 		if (s.equals("null")) {
 			return null;
 		} else if (s.startsWith("\"")) {
@@ -260,7 +259,7 @@ public class Json implements Serializer {
 		for (int i = 1; i < chars.length; i++) {
 			i = consumeWhitespace(chars, i);
 			SearchResult result = extractNextToken(chars, i);
-			i = result.endIndex + 1;
+			i = result.endIndex;
 			split.add(result.token);
 
 			i = consumeWhitespace(chars, i);
@@ -309,33 +308,44 @@ public class Json implements Serializer {
 		return new SearchResult(i, keyName.toString());
 	}
 
-	private SearchResult extractNextToken(char[] s, int starting) {
-		char startToken = s[starting];
-		char searchToken = opposingToken(s[starting]);
+	private SearchResult extractNextToken(char[] s, int index) {
+		int startIndex = index;
+
+		char startToken = s[index];
+		char searchToken = opposingToken(s[index]);
 		int innerCount = 0;
-		StringBuilder value = new StringBuilder();
 
-		value.append(s[starting]);
 		innerCount++;
-		starting ++;
+		index++;
 
-		while (true) {
-			value.append(s[starting]);
-			if (startToken == KEY_BARRIER && s[starting] == KEY_BARRIER) {
-				break;
-			} else if (s[starting] == startToken) {
-				innerCount++;
-			} else if (s[starting] == searchToken) {
-				innerCount--;
-				if (innerCount == 0) {
+		if (!matchesOpposing(s[index], searchToken)) {
+			do {
+				index++;
+				if (index >= s.length) {
 					break;
+				} else if (startToken == KEY_BARRIER && s[index] == KEY_BARRIER) {
+					if (s[index] == KEY_BARRIER) {
+						index++;
+					}
+					break;
+				} else if (isBoundaryChar(startToken) && s[index] == startToken) {
+					innerCount++;
+				} else if (matchesOpposing(s[index], searchToken)) {
+					innerCount--;
+					if (innerCount == 0) {
+						if (searchToken != PAIR_DELIMITER && searchToken != KEY_BARRIER) {
+							index++;
+						}
+						break;
+					}
 				}
-			}
-
-			starting++;
+			} while (index < s.length);
+		} else if (matchesOpposing(s[index], searchToken) && (searchToken == OBJECT_TOKEN_CLOSE || searchToken == LIST_TOKEN_CLOSE)) {
+			index++;
 		}
 
-		return new SearchResult(starting, value.toString());
+		String val = new String(s, startIndex, index - startIndex);
+		return new SearchResult(index, val);
 	}
 
 	private char opposingToken(char token) {
@@ -352,7 +362,31 @@ public class Json implements Serializer {
 				return KEY_BARRIER;
 		}
 
-		return ' ';
+		return PAIR_DELIMITER;
+	}
+
+	private boolean isBoundaryChar(char token) {
+		switch (token) {
+			case OBJECT_TOKEN_CLOSE:
+			case OBJECT_TOKEN_OPEN:
+			case LIST_TOKEN_CLOSE:
+			case LIST_TOKEN_OPEN:
+			case PAIR_DELIMITER:
+			case KEY_BARRIER:
+			case KEY_DELIMITER:
+				return true;
+		}
+		return false;
+	}
+
+	private boolean matchesOpposing(char search, char token) {
+		if (search == token) {
+			return true;
+		} else if (token == PAIR_DELIMITER) {
+			return search == OBJECT_TOKEN_CLOSE || search == LIST_TOKEN_CLOSE || search == PAIR_DELIMITER;
+		}
+
+		return false;
 	}
 
 	private static class SearchResult {

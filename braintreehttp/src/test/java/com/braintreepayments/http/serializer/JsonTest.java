@@ -273,6 +273,15 @@ public class JsonTest {
 	}
 
 	@Test
+	public void testJson_deserialize_deserializesWithCommasInValues() throws IOException {
+		String empty = "{\"key\": \"one,two\", \"key_two\": \"four,five\"}";
+		Map<String,Object> deserialized = new Json().deserialize(empty, Map.class);
+
+		assertEquals(deserialized.size(), 2);
+		assertEquals(deserialized.get("key"), "one,two");
+		assertEquals(deserialized.get("key_two"), "four,five");
+	}
+	@Test
 	public void testJson_deserialize_deserializeNestedList() throws IOException {
 		String serializedZoo = "[[\"name\",\"Monterey Bay Aquarium\"],[\"Shedd\"]]";
 
@@ -282,5 +291,22 @@ public class JsonTest {
 		assertEquals(strings.get(0).get(1), "Monterey Bay Aquarium");
 
 		assertEquals(strings.get(1).get(0), "Shedd");
+	}
+
+	@Test
+	public void testNestedEmptyObj() throws IOException {
+		String empty = "{\"id\":{}}";
+
+		Map<String, Object> obj = new Json().deserialize(empty, Map.class);
+		assertNotNull(obj.get("id"));
+	}
+
+	@Test
+	public void testNestedEmptyList() throws IOException {
+		String empty = "{\"id\":[]}";
+
+		Map<String,Object> obj = new Json().deserialize(empty, Map.class);
+		assertNotNull(obj.get("id"));
+		assertTrue(obj.get("id") instanceof List);
 	}
 }
