@@ -32,7 +32,7 @@ public class Encoder {
 			throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable", request.body().getClass().getSimpleName()));
 		}
 
-		return serializer.serialize((Serializable) request.body());
+		return serializer.serialize(request.body());
 	}
 
 	public <T> T decode(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
