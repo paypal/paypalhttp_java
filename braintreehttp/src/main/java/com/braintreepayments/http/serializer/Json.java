@@ -114,7 +114,7 @@ public class Json implements Serializer {
 
 			builder.append(LIST_TOKEN_CLOSE);
 		} else if (obj instanceof Serializable) {
-			builder.append(serialize((Serializable) obj));
+			builder.append(serialize(obj));
 		} else if (obj instanceof Map) {
 			builder.append(serializeObjectInternal((Map<String, Object>) obj));
 		} else {
@@ -126,26 +126,14 @@ public class Json implements Serializer {
 
 	private List<Object> deserializeListInternal(String json) throws JsonParseException {
 		List<Object> values = new ArrayList<>();
-
-		json = json.substring(1, json.length() - 1).trim();
-		char innerDelim = json.charAt(json.length() - 1);
-
-		String[] innerValues = json.split(new String(new char[]{innerDelim, PAIR_DELIMITER}));
-		if (innerValues.length > 0) {
-			int delimCount = charCount(json, innerDelim);
-			if (innerDelim == KEY_BARRIER) {
-				delimCount /= 2;
-			}
-			if (delimCount -1 > charCount(json, PAIR_DELIMITER)) {
-				throw new JsonParseException("Missing list delimiter " + json);
-			}
+		if (json.length() == 2) {
+			return values;
 		}
+
+		List<String> innerValues = splitJsonArray(json.trim());
 		for (String innerValue : innerValues) {
-			innerValue = innerValue.trim();
-			if (innerValue.charAt(innerValue.length() - 1) != innerDelim) {
-				innerValue += innerDelim;
-			}
-			if (innerDelim == OBJECT_TOKEN_CLOSE || innerDelim == LIST_TOKEN_CLOSE) {
+			char innerDelim = innerValue.charAt(0);
+			if (innerDelim == OBJECT_TOKEN_OPEN || innerDelim == LIST_TOKEN_OPEN) {
 				values.add(deserializeInternal(innerValue));
 			} else {
 				values.add(deserializeSimple(innerValue));
@@ -187,7 +175,11 @@ public class Json implements Serializer {
 			}
 
 			if (raw[i] == OBJECT_TOKEN_OPEN) {
-				i = advanceTo(raw, i, KEY_BARRIER);
+				if (raw[i + 1] == OBJECT_TOKEN_CLOSE) {
+					return deserialized;
+				} else {
+					i = advanceTo(raw, i, KEY_BARRIER);
+				}
 			}
 
 			SearchResult keyResult = extractKey(raw, i);
@@ -246,18 +238,6 @@ public class Json implements Serializer {
 		}
 	}
 
-	private int charCount(String s, char search) {
-		char[] raw = s.toCharArray();
-		int count = 0;
-		for (char c : raw) {
-			if (c == search) {
-				count++;
-			}
-		}
-
-		return count;
-	}
-
 	private int advanceTo(char[] raw, int i, char search) {
 		while(raw[i] != search) {
 			i++;
@@ -272,6 +252,28 @@ public class Json implements Serializer {
 		}
 
 		return i;
+	}
+
+	private List<String> splitJsonArray(String s) throws JsonParseException {
+		List<String> split = new ArrayList<>();
+		char[] chars = s.toCharArray();
+		for (int i = 1; i < chars.length; i++) {
+			i = consumeWhitespace(chars, i);
+			SearchResult result = extractNextToken(chars, i);
+			i = result.endIndex + 1;
+			split.add(result.token);
+
+			i = consumeWhitespace(chars, i);
+			if (chars[i] != LIST_TOKEN_CLOSE && chars[i] != PAIR_DELIMITER) {
+				throw new JsonParseException("Invalid json array delimiter " + chars[i]);
+			}
+
+			if (chars[i] == LIST_TOKEN_CLOSE) {
+				break;
+			}
+		}
+
+		return split;
 	}
 
 	private SearchResult extractKey(char[] raw, int i) throws JsonParseException {
@@ -312,9 +314,16 @@ public class Json implements Serializer {
 		char searchToken = opposingToken(s[starting]);
 		int innerCount = 0;
 		StringBuilder value = new StringBuilder();
+
+		value.append(s[starting]);
+		innerCount++;
+		starting ++;
+
 		while (true) {
 			value.append(s[starting]);
-			if (s[starting] == startToken) {
+			if (startToken == KEY_BARRIER && s[starting] == KEY_BARRIER) {
+				break;
+			} else if (s[starting] == startToken) {
 				innerCount++;
 			} else if (s[starting] == searchToken) {
 				innerCount--;

@@ -257,6 +257,22 @@ public class SerializerTest {
 	}
 
 	@Test
+	public void testJson_deserialize_deserializesEmptyObject() throws IOException {
+    	String empty = "{}";
+    	Map<String, Object> deserialized = new Json().deserialize(empty, Map.class);
+
+    	assertEquals(deserialized.size(), 0);
+	}
+
+	@Test
+	public void testJson_deserialize_deserializesEmptyList() throws IOException {
+		String empty = "[]";
+		List<Object> deserialized = new Json().deserialize(empty, List.class);
+
+		assertEquals(deserialized.size(), 0);
+	}
+
+	@Test
 	public void testJson_deserialize_deserializeNestedList() throws IOException {
 		String serializedZoo = "[[\"name\",\"Monterey Bay Aquarium\"],[\"Shedd\"]]";
 
