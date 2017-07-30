@@ -308,44 +308,76 @@ public class Json implements Serializer {
 		return new SearchResult(i, keyName.toString());
 	}
 
-	private SearchResult extractNextToken(char[] s, int index) {
-		int startIndex = index;
+	private SearchResult extractNextToken(char[] s, int i) {
+		switch (s[i]) {
+			case OBJECT_TOKEN_OPEN:
+			case LIST_TOKEN_OPEN:
+				return extractNextObjectToken(s, i);
+			case KEY_BARRIER:
+				return extractNextStringToken(s, i);
+			default:
+				return extractNextValueToken(s, i);
+		}
+	}
 
-		char startToken = s[index];
-		char searchToken = opposingToken(s[index]);
+	private SearchResult extractNextObjectToken(char[] s, int i) {
+		int startIndex = i;
+
+		char startToken = s[i];
+		char searchToken = opposingToken(s[i]);
 		int innerCount = 0;
 
 		innerCount++;
-		index++;
+		i++;
 
-		if (!matchesOpposing(s[index], searchToken)) {
+		if (!matchesOpposing(s[i], searchToken)) {
 			do {
-				index++;
-				if (index >= s.length) {
+				i++;
+				if (i >= s.length) {
 					break;
-				} else if (startToken == KEY_BARRIER && s[index] == KEY_BARRIER) {
-					if (s[index] == KEY_BARRIER) {
-						index++;
-					}
-					break;
-				} else if (isBoundaryChar(startToken) && s[index] == startToken) {
+				} else if (isBoundaryChar(startToken) && s[i] == startToken) {
 					innerCount++;
-				} else if (matchesOpposing(s[index], searchToken)) {
+				} else if (matchesOpposing(s[i], searchToken)) {
 					innerCount--;
 					if (innerCount == 0) {
-						if (searchToken != PAIR_DELIMITER && searchToken != KEY_BARRIER) {
-							index++;
-						}
+						i++;
 						break;
 					}
 				}
-			} while (index < s.length);
-		} else if (matchesOpposing(s[index], searchToken) && (searchToken == OBJECT_TOKEN_CLOSE || searchToken == LIST_TOKEN_CLOSE)) {
-			index++;
+			} while (i < s.length);
+		} else if (matchesOpposing(s[i], searchToken)) {
+			i++;
 		}
 
-		String val = new String(s, startIndex, index - startIndex);
-		return new SearchResult(index, val);
+		String val = new String(s, startIndex, i - startIndex);
+		return new SearchResult(i, val);
+	}
+
+	private SearchResult extractNextStringToken(char[] s, int i) {
+		int startIndex = i;
+
+		if (s[i+1] == KEY_BARRIER) {
+			i += 2;
+		} else {
+			do {
+				i++;
+			} while(s[i] != KEY_BARRIER);
+			i++;
+		}
+
+		String val = new String(s, startIndex, i - startIndex);
+		return new SearchResult(i, val);
+	}
+
+	private SearchResult extractNextValueToken(char[] s, int i) {
+		int startIndex = i;
+
+		while (s[i] != PAIR_DELIMITER && s[i] != OBJECT_TOKEN_CLOSE && s[i] != LIST_TOKEN_CLOSE) {
+			i++;
+		}
+
+		String val = new String(s, startIndex, i - startIndex);
+		return new SearchResult(i, val);
 	}
 
 	private char opposingToken(char token) {

@@ -309,4 +309,13 @@ public class JsonTest {
 		assertNotNull(obj.get("id"));
 		assertTrue(obj.get("id") instanceof List);
 	}
+
+	@Test
+	public void testParsesEmptyString() throws IOException {
+    	String json = "{\"name\": \"\"}";
+
+    	Map<String, Object> deserialized = new Json().deserialize(json, Map.class);
+
+    	assertEquals(deserialized.get("name"), "");
+	}
 }
