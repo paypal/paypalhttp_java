@@ -74,7 +74,6 @@ allprojects {
 
 project(':braintreehttp') {
     dependencies {
-        compileOnly "org.projectlombok:lombok:1.16.10"
         testCompile project(':braintreehttp-testutils')
     }
 

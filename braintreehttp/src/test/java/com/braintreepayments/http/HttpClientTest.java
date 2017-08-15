@@ -1,5 +1,19 @@
 package com.braintreepayments.http;
 
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.serializer.Deserializable;
@@ -9,31 +23,40 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
+
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
 
 import static com.braintreepayments.http.Headers.CONTENT_TYPE;
 import static com.braintreepayments.http.Headers.USER_AGENT;
-import static com.github.tomakehurst.wiremock.client.WireMock.*;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.*;
-import static java.net.HttpURLConnection.*;
+import static com.github.tomakehurst.wiremock.client.WireMock.containing;
+import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.post;
+import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
+import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
+import static com.github.tomakehurst.wiremock.client.WireMock.verify;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.DELETE;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.GET;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.POST;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.PUT;
+import static java.net.HttpURLConnection.HTTP_ACCEPTED;
+import static java.net.HttpURLConnection.HTTP_CREATED;
+import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
+import static java.net.HttpURLConnection.HTTP_OK;
+import static java.net.HttpURLConnection.HTTP_RESET;
+import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.*;
+import static org.testng.Assert.assertNull;
+import static org.testng.Assert.assertTrue;
+import static org.testng.Assert.fail;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
@@ -51,7 +74,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test(dataProvider = "getErrorCodesWithException")
 	public void testHttpClient_execute_throwsProperException(final int statusCode, final Class expectedExceptionClass) throws IOException, IllegalAccessException, InstantiationException {
 		HttpRequest<String> request = simpleRequest();
-		HttpResponse expectedResponse = HttpResponse.builder().statusCode(statusCode).build();
+		HttpResponse<String> expectedResponse = new HttpResponse<>(null, statusCode, null);
 
 		stub(request, expectedResponse);
 
@@ -66,9 +89,8 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test(dataProvider = "getSuccessCode")
 	public void testHttpClient_execute_returnsSuccess(final int statusCode) throws IOException {
 		HttpRequest<String> request = simpleRequest();
-		HttpResponse<String> expectedResponse = HttpResponse.<String>builder()
-						.statusCode(statusCode)
-						.build();
+
+		HttpResponse<String> expectedResponse = new HttpResponse<>(null, statusCode, null);
 
 		stub(request, expectedResponse);
 
@@ -327,10 +349,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test
 	public void testHttpClient_doesNotManuallyDeserializeIfResponseTypeIsString() throws IOException {
 		HttpRequest<String> request = simpleRequest();
-		HttpResponse<String> response = HttpResponse.<String>builder()
-						.statusCode(200)
-						.result("Here's the response")
-						.build();
+		HttpResponse<String> response = new HttpResponse<>(null, 200, "Here's the response");
 
 		stub(request, response);
 
@@ -347,11 +366,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 		zoo.numberOfAnimals = 10;
 		zoo.name = "Brian Tree";
 
-		HttpResponse<Zoo> response = HttpResponse.<Zoo>builder()
-						.headers(new Headers().header("Content-Type", "application/json"))
-						.statusCode(201)
-						.result(zoo)
-						.build();
+		HttpResponse<Zoo> response = new HttpResponse<>(new Headers().header("Content-Type", "application/json"), 201, zoo);
 
 		stub(request, response);
 
@@ -369,11 +384,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 		zoo.numberOfAnimals = 10;
 		zoo.name = "Brian Tree";
 
-		HttpResponse<Zoo> response = HttpResponse.<Zoo>builder()
-				.headers(new Headers().header("Content-Type", "application/json"))
-				.statusCode(201)
-				.result(zoo)
-				.build();
+		HttpResponse<Zoo> response = new HttpResponse<>(new Headers().header("Content-Type", "application/json"), 201, zoo);
 
 		stub(request, response);
 
@@ -386,10 +397,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 		HttpRequest<String> request = simpleRequest();
 		request.verb("PATCH");
 
-		HttpResponse<String> response = HttpResponse.<String>builder()
-						.headers(new Headers().header("Content-Type", "application/json"))
-						.statusCode(200)
-						.build();
+		HttpResponse<Zoo> response = new HttpResponse<>(new Headers().header("Content-Type", "application/json"), 200, null);
 
 		stub(request, response);
 

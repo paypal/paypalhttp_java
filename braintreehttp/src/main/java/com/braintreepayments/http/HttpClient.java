@@ -1,12 +1,11 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.exceptions.HttpException;
-import com.braintreepayments.http.internal.TLSSocketFactory;
-
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLException;
-import javax.net.ssl.SSLSocketFactory;
-import java.io.*;
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
 import java.lang.reflect.Field;
 import java.net.HttpURLConnection;
 import java.net.ProtocolException;
@@ -18,6 +17,13 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.TimeUnit;
 import java.util.zip.GZIPInputStream;
+
+import com.braintreepayments.http.exceptions.HttpException;
+import com.braintreepayments.http.internal.TLSSocketFactory;
+
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLException;
+import javax.net.ssl.SSLSocketFactory;
 
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
@@ -277,11 +283,7 @@ public class HttpClient {
 				}
 			}
 
-			return HttpResponse.<T>builder()
-					.headers(responseHeaders)
-					.statusCode(statusCode)
-					.result(deserializedResponse)
-					.build();
+			return new HttpResponse<>(responseHeaders, statusCode, deserializedResponse);
 		} else {
 			responseBody = readStream(connection.getErrorStream(), gzip);
 			throw new HttpException(responseBody, statusCode, responseHeaders);

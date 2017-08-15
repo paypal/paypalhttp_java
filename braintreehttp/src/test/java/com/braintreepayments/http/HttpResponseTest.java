@@ -8,11 +8,7 @@ public class HttpResponseTest {
 
     @Test
     public void testHttpResponse_headerNotNullEvenIfSet() {
-        HttpResponse<String> response = HttpResponse.<String>builder()
-                .result("data")
-                .statusCode(100)
-                .headers(new Headers())
-                .build();
+        HttpResponse<String> response = new HttpResponse<>(null, 100, "data");
         assertNotNull(response.headers());
     }
 }
