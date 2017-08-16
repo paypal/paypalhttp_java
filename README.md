@@ -77,3 +77,6 @@ try {
 
 By default, BraintreeHttp will use the built-in `TLSSoccketFactory` when connecting to URLs that use `https` as their scheme. If you'd like to do cert-pinning, or use a different SSL implementation, you can provide your own `SSLSocketFactory` via `HttpClient#setSSLSocketFactory()`.
 
+## License
+
+BraintreeHttp-Java is open source and available under the MIT license. See the [LICENSE](./LICENSE) file for more info.
