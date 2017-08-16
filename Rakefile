@@ -1,8 +1,9 @@
 require 'rake'
 
-task :default => :test
+spec = Gem::Specification.find_by_name 'releasinator'
+load "#{spec.gem_dir}/lib/tasks/releasinator.rake"
 
-task :release => [:build, :test, :release_braintreehttp]
+task :default => :test
 
 task :build do
   sh "./gradlew clean build"
@@ -24,3 +25,5 @@ task :release_braintreehttp do
   sleep 600
   puts "Braintreehttp has been released"
 end
+
+
