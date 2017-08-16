@@ -80,3 +80,7 @@ By default, BraintreeHttp will use the built-in `TLSSoccketFactory` when connect
 ## License
 
 BraintreeHttp-Java is open source and available under the MIT license. See the [LICENSE](./LICENSE) file for more info.
+
+
+## Contributions
+Pull requests and new issues are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for details.
