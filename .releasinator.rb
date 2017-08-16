@@ -43,11 +43,11 @@ configatron.release_to_github = false
 
 
 # Other tasks
-def build do
+def build
   CommandProcess.command("./gradlew clean build test")
 end
 
-def test do
+def test
   CommandProcess.command("./gradlew clean test")
 end
 
