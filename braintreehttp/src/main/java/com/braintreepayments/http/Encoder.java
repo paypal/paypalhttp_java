@@ -39,7 +39,7 @@ public class Encoder {
 		Serializer deserializer = serializers.get(headers.header(Headers.CONTENT_TYPE));
 		if (deserializer == null) {
 			throw new UnsupportedEncodingException(String.format("Unable to deserialize response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedDecodings()));
-		} else if (Deserializable.class.isAssignableFrom(responseClass) || Map.class.isAssignableFrom(responseClass)) {
+		} else if (Deserializable.class.isAssignableFrom(responseClass) || Map.class.isAssignableFrom(responseClass) || List.class.isAssignableFrom(responseClass)) {
 			return deserializer.deserialize(responseBody, responseClass);
 		}
 		throw new UnsupportedEncodingException(String.format("Destination class %s must implement Deserializable or Map", responseClass.getSimpleName()));

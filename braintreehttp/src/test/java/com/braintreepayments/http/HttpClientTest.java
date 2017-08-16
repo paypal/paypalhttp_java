@@ -1,19 +1,5 @@
 package com.braintreepayments.http;
 
-import java.io.File;
-import java.io.IOException;
-import java.lang.reflect.InvocationTargetException;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.serializer.Deserializable;
@@ -23,40 +9,31 @@ import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import com.github.tomakehurst.wiremock.verification.LoggedRequest;
-
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.File;
+import java.io.IOException;
+import java.lang.reflect.InvocationTargetException;
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.*;
 
 import static com.braintreepayments.http.Headers.CONTENT_TYPE;
 import static com.braintreepayments.http.Headers.USER_AGENT;
-import static com.github.tomakehurst.wiremock.client.WireMock.containing;
-import static com.github.tomakehurst.wiremock.client.WireMock.equalTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.post;
-import static com.github.tomakehurst.wiremock.client.WireMock.postRequestedFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.stubFor;
-import static com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo;
-import static com.github.tomakehurst.wiremock.client.WireMock.verify;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.DELETE;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.GET;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.POST;
-import static com.github.tomakehurst.wiremock.http.RequestMethod.PUT;
-import static java.net.HttpURLConnection.HTTP_ACCEPTED;
-import static java.net.HttpURLConnection.HTTP_CREATED;
-import static java.net.HttpURLConnection.HTTP_NO_CONTENT;
-import static java.net.HttpURLConnection.HTTP_OK;
-import static java.net.HttpURLConnection.HTTP_RESET;
-import static java.net.HttpURLConnection.HTTP_UNAUTHORIZED;
+import static com.github.tomakehurst.wiremock.client.WireMock.*;
+import static com.github.tomakehurst.wiremock.http.RequestMethod.*;
+import static java.net.HttpURLConnection.*;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
-import static org.testng.Assert.assertNull;
-import static org.testng.Assert.assertTrue;
-import static org.testng.Assert.fail;
+import static org.testng.Assert.*;
 import static org.testng.AssertJUnit.assertEquals;
 import static org.testng.AssertJUnit.assertFalse;
 
@@ -97,7 +74,6 @@ public class HttpClientTest extends BasicWireMockHarness {
 		HttpResponse actualResponse = client.execute(request);
 		assertEquals(expectedResponse.statusCode(), actualResponse.statusCode());
 	}
-
 
 	@Test(dataProvider = "getVerbs")
 	public void testHttpClient_execute_setsVerbFromRequest(RequestMethod requestMethod) throws IOException {
@@ -344,6 +320,29 @@ public class HttpClientTest extends BasicWireMockHarness {
 		Headers actualResponse = client.parseResponseHeaders(connection);
 		assertEquals("value", actualResponse.header("key"));
 		assertEquals("another-value", actualResponse.header("another-key"));
+	}
+
+	@Test
+	public void testHttpClient_pareseResponse_listResponse() throws IOException {
+		HttpRequest<List> request = new HttpRequest<>("/whatever", "GET", List.class);
+
+		List<String> result = new ArrayList<String>() {{
+			add("One");
+			add("Two");
+		}};
+
+		Headers responseHeaders = new Headers()
+				.header("Content-Type", "application/json");
+		HttpResponse<List<String>> expectedResponse = new HttpResponse<>(responseHeaders, 200, result);
+
+		stub(request, expectedResponse);
+
+		HttpResponse<List> actualResponse = client.execute(request);
+		assertEquals(expectedResponse.statusCode(), actualResponse.statusCode());
+
+		List<String> data = actualResponse.result();
+		assertEquals("One", data.get(0));
+		assertEquals("Two", data.get(1));
 	}
 
 	@Test
