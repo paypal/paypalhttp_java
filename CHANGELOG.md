@@ -1,2 +1,5 @@
+## 1.2.8
+* Update nexus-staging gradle plugin.
+
 ## 1.2.7
-* Added release scripting and CHANGELOG.
+* added release scripting and changelog.
