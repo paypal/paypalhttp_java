@@ -2,19 +2,15 @@ task :default => :test
 
 configatron.product_name = "BraintreeHttp Java"
 
-# List of items to confirm from the person releasing.  Required, but empty list is ok.
-configatron.prerelease_checklist_items = [
-]
-
 # Other tasks
 def build
-  CommandProcess.command("./gradlew clean build test")
+  CommandProcessor.command("./gradlew clean build test")
 end
 
 configatron.build_method = method(:build)
 
 def validate_version_match()
-  if 'v'+package_version != @current_release.version
+  if package_version != @current_release.version
     Printer.fail("package version #{package_version} does not match changelog version #{@current_release.version}.")
     abort()
   end
@@ -22,13 +18,11 @@ def validate_version_match()
 end
 
 def publish_to_package_manager(version)
-  puts "Version passed to method: #{version}"
-  puts "Package Version: #{package_version}"
-  # CommandProcessor.command("./gradlew uploadArchives", live_output=true)
-  # CommandProcessor.command("./gradlew closeRepository", live_output=true)
-  # CommandProcessor.command("sleep 60")
-  # puts "Sleeping for one minute to allow BraintreeHttp modules to close"
-  # CommandProcessory.command("./gradlew promoteRepository", live_output=true)
+  CommandProcessor.command("./gradlew uploadArchives", live_output=true)
+  CommandProcessor.command("./gradlew closeRepository", live_output=true)
+  CommandProcessor.command("sleep 60")
+  puts "Sleeping for one minute to allow BraintreeHttp modules to close"
+  CommandProcessory.command("./gradlew promoteRepository", live_output=true)
 end
 
 # The method that publishes the project to the package manager.  Required.
@@ -45,6 +39,12 @@ configatron.wait_for_package_manager_method = method(:wait_for_package_manager)
 # True if publishing the root repo to GitHub.  Required.
 configatron.release_to_github = true
 
+
+# List of items to confirm from the person releasing.  Required, but empty list is ok.
+configatron.prerelease_checklist_items = []
+configatron.custom_validation_methods = [
+  method(:validate_version_match)
+]
 
 def test
   CommandProcess.command("./gradlew clean test")
