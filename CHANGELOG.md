@@ -1,3 +1,6 @@
+## 1.2.9
+* Update release step to release modules separately.
+
 ## 1.2.8
 * Update nexus-staging gradle plugin.
 

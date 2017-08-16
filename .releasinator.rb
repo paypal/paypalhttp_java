@@ -18,8 +18,14 @@ def validate_version_match()
 end
 
 def publish_to_package_manager(version)
-  CommandProcessor.command("./gradlew braintreehttp:uploadArchives braintreehttp-testutils:uploadArchives", live_output=true)
-  CommandProcessor.command("./gradlew braintreehttp:closeAndPromoteRepository braintreehttp-testutils:closeAndPromoteRepository", live_output=true)
+  CommandProcessor.command("./gradlew braintreehttp:uploadArchives", live_output=true)
+  CommandProcessor.command("./gradlew braintreehttp:closeAndReleaseRepository", live_output=true)
+
+  puts
+  sleep 60
+
+  CommandProcessor.command("./gradlew braintreehttp-testutils:uploadArchives", live_output=true)
+  CommandProcessor.command("./gradlew braintreehttp-testutils:closeAndReleaseRepository", live_output=true)
 end
 
 # The method that publishes the project to the package manager.  Required.
