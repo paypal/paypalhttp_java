@@ -2,7 +2,7 @@ package com.braintreepayments.http.serializer;
 
 import com.braintreepayments.http.Zoo;
 import com.braintreepayments.http.exceptions.JsonParseException;
-import com.braintreepayments.http.exceptions.JsonSerializeException;
+import com.braintreepayments.http.exceptions.SerializeException;
 import org.testng.annotations.Test;
 
 import java.io.IOException;
@@ -17,7 +17,7 @@ import static org.testng.Assert.*;
 public class JsonTest {
 
     @Test()
-	public void testJson_serializesObjectsToJSON() throws JsonSerializeException {
+	public void testJson_serializesObjectsToJSON() throws SerializeException {
     	Zoo.Fins fishAppendages = new Zoo.Fins();
     	fishAppendages.dorsalFin = new Zoo.Appendage("back", 2);
     	fishAppendages.ventralFin = new Zoo.Appendage("front", 2);
@@ -48,7 +48,7 @@ public class JsonTest {
     }
 
     @Test()
-    public void testJson_serializesNestedMaps() throws JsonSerializeException {
+    public void testJson_serializesNestedMaps() throws SerializeException {
         HashMap<String, Object> map = new HashMap<>();
 
         HashMap<String, String> map1 = new HashMap<>();
@@ -69,7 +69,7 @@ public class JsonTest {
     }
 
     @Test()
-    public void testJson_serializesArrays() throws JsonSerializeException {
+    public void testJson_serializesArrays() throws SerializeException {
         class Base implements Serializable {
             private String[] array = {"value1", "value2"};
 
@@ -85,7 +85,7 @@ public class JsonTest {
     }
 
     @Test()
-    public void testJson_serializesNull() throws JsonSerializeException {
+    public void testJson_serializesNull() throws SerializeException {
         class Base implements Serializable {
             @Override
 			public void serialize(Map<String, Object> map) {

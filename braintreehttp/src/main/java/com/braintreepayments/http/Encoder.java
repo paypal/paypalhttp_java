@@ -19,9 +19,10 @@ public class Encoder {
 	public Encoder() {
 		registerSerializer(new Json());
 		registerSerializer(new Text());
+		registerSerializer(new Multipart());
 	}
 
-	public String encode(HttpRequest request) throws IOException {
+	public byte[] encode(HttpRequest request) throws IOException {
 		String contentType = request.headers().header(Headers.CONTENT_TYPE);
 		if (contentType != null) {
 			Serializer serializer = serializer(contentType);
@@ -31,7 +32,7 @@ public class Encoder {
 					request.requestBody() instanceof List ||
 					request.requestBody() instanceof Map ||
 					request.requestBody() instanceof String) {
-				return serializer.serialize(request.requestBody());
+				return serializer.serialize(request);
 			} else {
 				throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable, Map, List, or String", request.responseClass().getSimpleName()));
 			}

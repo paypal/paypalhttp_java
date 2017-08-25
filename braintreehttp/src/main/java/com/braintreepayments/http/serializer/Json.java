@@ -1,7 +1,8 @@
 package com.braintreepayments.http.serializer;
 
+import com.braintreepayments.http.HttpRequest;
 import com.braintreepayments.http.exceptions.JsonParseException;
-import com.braintreepayments.http.exceptions.JsonSerializeException;
+import com.braintreepayments.http.exceptions.SerializeException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -43,7 +44,11 @@ public class Json implements Serializer {
 	}
 
 	@Override
-	public String serialize(Object o) throws JsonSerializeException {
+	public byte[] serialize(HttpRequest request) throws SerializeException {
+		return serialize(request.requestBody()).getBytes();
+	}
+
+	public String serialize(Object o) throws SerializeException {
 		if (o instanceof Serializable) {
 			Map<String, Object> map = new HashMap<>();
 			((Serializable) o).serialize(map);
@@ -53,7 +58,7 @@ public class Json implements Serializer {
 		}
 	}
 
-	private String serializeObjectInternal(Map<String, Object> map) throws JsonSerializeException {
+	private String serializeObjectInternal(Map<String, Object> map) throws SerializeException {
 		StringBuilder builder = new StringBuilder();
 
 		builder.append(OBJECT_TOKEN_OPEN);
@@ -61,7 +66,7 @@ public class Json implements Serializer {
 		boolean hasContents = false;
 		for (Map.Entry<?, ?> entry : map.entrySet()) {
 			if (!(entry.getKey() instanceof String)) {
-				throw new JsonSerializeException("Map key must be of class String");
+				throw new SerializeException("Map key must be of class String");
 			}
 
 			builder.append(String.format("\"%s\":", (String) entry.getKey()));
@@ -80,7 +85,7 @@ public class Json implements Serializer {
 	}
 
 	@SuppressWarnings("unchecked")
-	private String jsonValueStringFor(Object obj) throws JsonSerializeException {
+	private String jsonValueStringFor(Object obj) throws SerializeException {
 		StringBuilder builder = new StringBuilder();
 		if (obj == null) {
 			builder.append("null");
@@ -118,7 +123,7 @@ public class Json implements Serializer {
 		} else if (obj instanceof Map) {
 			builder.append(serializeObjectInternal((Map<String, Object>) obj));
 		} else {
-			throw new JsonSerializeException(String.format("Object of class %s could not be JSON-serialized", obj.getClass()));
+			throw new SerializeException(String.format("Object of class %s could not be JSON-serialized", obj.getClass()));
 		}
 
 		return builder.toString();

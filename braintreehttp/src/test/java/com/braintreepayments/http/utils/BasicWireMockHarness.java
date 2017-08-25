@@ -4,11 +4,12 @@ import com.braintreepayments.http.Environment;
 import com.braintreepayments.http.Headers;
 import com.braintreepayments.http.HttpRequest;
 import com.braintreepayments.http.HttpResponse;
-import com.braintreepayments.http.exceptions.JsonSerializeException;
+import com.braintreepayments.http.exceptions.SerializeException;
 import com.braintreepayments.http.serializer.Json;
 import com.braintreepayments.http.testutils.WireMockHarness;
 import org.testng.annotations.BeforeMethod;
 
+import java.io.IOException;
 import java.lang.reflect.Field;
 import java.util.Map;
 
@@ -37,8 +38,8 @@ public class BasicWireMockHarness extends WireMockHarness {
 				body = (String) request.requestBody();
 			} else {
 				try {
-					body = new Json().serialize(request.requestBody());
-				} catch (JsonSerializeException ignored) {}
+					body = new String(new Json().serialize(request));
+				} catch (IOException ignored) {}
 			}
 		}
 
@@ -51,7 +52,7 @@ public class BasicWireMockHarness extends WireMockHarness {
 			} else {
 				try {
 					responseBody = new Json().serialize(response.result());
-				} catch (JsonSerializeException e) {}
+				} catch (SerializeException e) {}
 			}
 			statusCode = response.statusCode();
 			responseHeaders = translateHeaders(response.headers());

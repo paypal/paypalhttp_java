@@ -5,24 +5,17 @@ import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.serializer.Deserializable;
 import com.braintreepayments.http.serializer.Serializable;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
-import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
-import com.github.tomakehurst.wiremock.verification.LoggedRequest;
 import org.testng.annotations.BeforeMethod;
 import org.testng.annotations.DataProvider;
 import org.testng.annotations.Test;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
-import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
-import java.net.URL;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
 
 import static com.braintreepayments.http.Headers.CONTENT_TYPE;
@@ -78,7 +71,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test(dataProvider = "getVerbs")
 	public void testHttpClient_execute_setsVerbFromRequest(RequestMethod requestMethod) throws IOException {
 		HttpRequest<String> request = simpleRequest()
-						.verb(requestMethod.getName());
+				.verb(requestMethod.getName());
 		stub(request, null);
 
 		client.execute(request);
@@ -93,13 +86,13 @@ public class HttpClientTest extends BasicWireMockHarness {
 		client.execute(request);
 
 		verify(getRequestedFor(urlEqualTo("/"))
-						.withHeader("User-Agent", equalTo("Java HTTP/1.1")));
+				.withHeader("User-Agent", equalTo("Java HTTP/1.1")));
 	}
 
 	@Test
 	public void testHttpClient_execute_setsPathFromRequest() throws IOException {
 		HttpRequest<String> request = simpleRequest()
-						.path("/somepath/to/a/rest/resource");
+				.path("/somepath/to/a/rest/resource");
 		stub(request, null);
 
 		client.execute(request);
@@ -115,19 +108,19 @@ public class HttpClientTest extends BasicWireMockHarness {
 		client.execute(request);
 
 		verify(getRequestedFor(urlEqualTo("/"))
-						.withHeader("User-Agent", equalTo("Test User Agent")));
+				.withHeader("User-Agent", equalTo("Test User Agent")));
 	}
 
 	@Test
 	public void testHttpClient_usesDefaultSSLSocketFactoryWhenNoFactoryIsSet()
-					throws IOException, NoSuchFieldException, IllegalAccessException {
+			throws IOException, NoSuchFieldException, IllegalAccessException {
 
 		assertTrue(client.getSSLSocketFactory() instanceof TLSSocketFactory);
 	}
 
 	@Test(expectedExceptions = IOException.class, expectedExceptionsMessageRegExp = "SSLSocketFactory was not set or failed to initialize")
 	public void testHttpClient_execute_postsErrorForHttpsRequestsWhenSSLSocketFactoryIsNull()
-					throws InterruptedException, IOException {
+			throws InterruptedException, IOException {
 		client = new HttpClient(httpsEnvironment);
 		client.setSSLSocketFactory(null);
 
@@ -216,39 +209,40 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test
 	public void testHttpClient_execute_setsHeadersFromRequest() throws IOException {
 		HttpRequest<String> request = simpleRequest()
-						.header("Key1", "Value1")
-						.header(CONTENT_TYPE, "application/xml");
+				.header("Key1", "Value1")
+				.header(CONTENT_TYPE, "application/xml");
 
 		stub(request, null);
 
 		client.execute(request);
 		verify(getRequestedFor(urlEqualTo("/"))
-						.withHeader("Key1", equalTo("Value1"))
-						.withHeader("Content-Type", equalTo("application/xml")));
+				.withHeader("Key1", equalTo("Value1"))
+				.withHeader("Content-Type", equalTo("application/xml")));
 	}
 
 	@Test
 	public void testHttpClient_execute_writesDataFromRequestIfPresent() throws IOException {
 		HttpRequest<String> request = simpleRequest()
-						.verb("POST")
-						.requestBody("some data");
+				.verb("POST")
+				.header(Headers.CONTENT_TYPE, "text/plain")
+				.requestBody("some data");
 
 		stub(request, null);
 
 		client.execute(request);
 		verify(postRequestedFor(urlEqualTo("/"))
-						.withRequestBody(containing("some data")));
+				.withRequestBody(containing("some data")));
 	}
 
 	@Test
 	public void testHttpClient_execute_doesNotwriteDataFromRequestIfNotPresent() throws IOException {
 		HttpRequest<String> request = simpleRequest()
-						.verb("POST");
+				.verb("POST");
 		stub(request, null);
 
 		client.execute(request);
 		verify(postRequestedFor(urlEqualTo("/"))
-						.withRequestBody(equalTo("")));
+				.withRequestBody(equalTo("")));
 	}
 
 	@Test
@@ -290,16 +284,6 @@ public class HttpClientTest extends BasicWireMockHarness {
 	public void testHttpClient_addInjector_withNull_doestNotAddNullInjector() {
 		client.addInjector(null);
 		assertEquals(1, client.mInjectors.size());
-	}
-
-	@Test
-	public void testHttpClient_applyHeadersFromRequest_SetsHeaders() throws IOException {
-		HttpRequest<String> request = simpleRequest();
-		request.header(USER_AGENT, "Custom User Agent");
-		HttpURLConnection connection = (HttpURLConnection) new URL(environment().baseUrl()).openConnection();
-
-		client.applyHeadersFromRequest(request, connection);
-		assertEquals(connection.getRequestProperty(USER_AGENT.toString()), "Custom User Agent");
 	}
 
 	@Test
@@ -414,130 +398,37 @@ public class HttpClientTest extends BasicWireMockHarness {
 		try {
 			client.execute(request);
 			fail("client.execute() with patch request did not throw, when we expected it to");
-		} catch(HttpException exception) {
+		} catch (HttpException exception) {
 			assertTrue(exception.statusCode() >= 300);
-		}
-	}
-
-	@Test
-	public void testHttpClient_HttpClientLoadsFileDataWithoutBodyPresent() throws IOException {
-		String uploadData = new String(fileData("fileupload_test_text.txt"));
-
-		FileUploadRequest request = simpleFileRequest()
-				.file("file_test_text", resource("fileupload_test_text.txt").toFile());
-
-		stubFor(post(urlEqualTo("/file_upload")));
-
-		client.execute(request);
-
-		verify(postRequestedFor(urlEqualTo("/file_upload"))
-				.withHeader("Content-Type", containing("multipart/form-data; boundary=boundary"))
-				.withRequestBody(containing("Content-Disposition: form-data; name=\"file_test_text\"; filename=\"fileupload_test_text.txt\""))
-				.withRequestBody(containing("Content-Type: text/plain"))
-				.withRequestBody(containing(uploadData))
-				.withRequestBody(containing("--boundary")));
-	}
-
-	@Test
-	public void testHttpClient_HttpClientLoadsFileDataWithTextBodyPresent() throws IOException {
-		String uploadData = new String(fileData("fileupload_test_text.txt"));
-
-		FileUploadRequest request = simpleFileRequest()
-				.file("file_test_text", resource("fileupload_test_text.txt").toFile())
-				.formData("some_field_key", "form_field=\"some_field_value\"");
-
-		stubFor(post(urlEqualTo("/file_upload")));
-
-		client.execute(request);
-
-		verify(postRequestedFor(urlEqualTo("/file_upload"))
-				.withHeader("Content-Type", containing("multipart/form-data; boundary=boundary"))
-				.withRequestBody(containing("Content-Disposition: form-data; name=\"file_test_text\"; filename=\"fileupload_test_text.txt\""))
-				.withRequestBody(containing("Content-Type: text/plain"))
-				.withRequestBody(containing(uploadData))
-				.withRequestBody(containing("--boundary"))
-				.withRequestBody(containing("Content-Disposition: form-data; name=\"some_field_key\""))
-				.withRequestBody(containing("form_field=\"some_field_value\"")));
-    }
-
-    @Test
-	public void testHttpClient_HttpClientLoadsFileDataWithBinaryBodyPresnt() throws IOException {
-		FileUploadRequest request = simpleFileRequest()
-				.file("binary_file", resource("fileupload_test_binary.jpg").toFile());
-
-		stubFor(post(urlEqualTo("/file_upload")));
-
-		client.execute(request);
-
-		verify(postRequestedFor(urlEqualTo("/file_upload"))
-				.withHeader("Content-Type", containing("multipart/form-data; boundary=boundary"))
-				.withRequestBody(containing("Content-Disposition: form-data; name=\"binary_file\"; filename=\"fileupload_test_binary.jpg\""))
-				.withRequestBody(containing("Content-Type: image/jpeg")));
-
-		LoggedRequest loggedRequest = WireMock.getAllServeEvents().get(0).getRequest();
-		byte[] imageData = fileData("fileupload_test_binary.jpg");
-		assertTrue(byteArrayContains(loggedRequest.getBody(), imageData));
-	}
-
-	@Test
-	public void testHttpClient_HttpClientThrowsExceptionWithNonMapBody() throws IOException {
-		FileUploadRequest request = simpleFileRequest();
-		request.requestBody(new Object());
-
-		stub(request, null);
-
-		try {
-			client.execute(request);
-			fail("Http client should have thrown for non-Map requestBody");
-		} catch (IOException ioe) {
-			assertEquals("Request requestBody must be Map<String, Object> when Content-Type is multipart/*", ioe.getMessage());
 		}
 	}
 
 	@DataProvider(name = "getVerbs")
 	public Object[][] getVerbs() {
 		return new Object[][]{
-						{GET},
-						{POST},
-						{PUT},
-						{DELETE}
+				{GET},
+				{POST},
+				{PUT},
+				{DELETE}
 		};
 	}
 
 	@DataProvider(name = "getSuccessCode")
 	public Object[][] getSuccessCode() {
 		return new Object[][]{
-						{HTTP_OK},
-						{HTTP_CREATED},
-						{HTTP_ACCEPTED},
-						{HTTP_RESET},
-						{HTTP_NO_CONTENT},
+				{HTTP_OK},
+				{HTTP_CREATED},
+				{HTTP_ACCEPTED},
+				{HTTP_RESET},
+				{HTTP_NO_CONTENT},
 		};
 	}
 
 	@DataProvider(name = "getErrorCodesWithException")
 	public Object[][] getErrorCodesWithException() {
 		return new Object[][]{
-						{HTTP_UNAUTHORIZED, HttpException.class},
+				{HTTP_UNAUTHORIZED, HttpException.class},
 		};
-	}
-
-	private boolean byteArrayContains(byte[] b1, byte[] subba) {
-		for (int i = 0; i < b1.length - subba.length; i++ ) {
-			if (Arrays.equals(Arrays.copyOfRange(b1, i, i + subba.length), subba)) {
-				return true;
-			}
-		}
-
-		return false;
-	}
-
-	private Path resource(String name) {
-		return Paths.get("src/test/resources/" + name).toAbsolutePath();
-	}
-
-	private byte[] fileData(String name) throws IOException {
-		return Files.readAllBytes(resource(name).toAbsolutePath());
 	}
 
 	private HttpRequest<String> simpleRequest() {
@@ -546,7 +437,8 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 	private class SampleObject implements Serializable, Deserializable {
 
-		public SampleObject() {}
+		public SampleObject() {
+		}
 
 		public String name;
 		public Integer age;
@@ -574,30 +466,4 @@ public class HttpClientTest extends BasicWireMockHarness {
 		}
 	}
 
-	private FileUploadRequest simpleFileRequest() {
-		return new FileUploadRequest("/file_upload", "POST", Void.class);
-	}
-
-	private class FileUploadRequest extends HttpRequest<Void> {
-
-		public FileUploadRequest(String path, String verb, Class<Void> responseClass) {
-			super(path, verb, responseClass);
-			header(Headers.CONTENT_TYPE, "multipart/form-data");
-			requestBody(new HashMap<String, Object>());
-		}
-
-		public FileUploadRequest file(String key, File f) {
-			Map<String, Object> existingBody = ((Map<String, Object>) requestBody());
-			existingBody.put(key, f);
-			requestBody(existingBody);
-			return this;
-		}
-
-		public FileUploadRequest formData(String key, String value) {
-			Map<String, Object> existingBody = ((Map<String, Object>) requestBody());
-			existingBody.put(key, value);
-			requestBody(existingBody);
-			return this;
-		}
-	}
 }

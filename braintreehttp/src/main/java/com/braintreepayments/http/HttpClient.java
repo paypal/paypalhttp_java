@@ -1,33 +1,25 @@
 package com.braintreepayments.http;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
-import java.lang.reflect.Field;
-import java.net.HttpURLConnection;
-import java.net.ProtocolException;
-import java.net.URL;
-import java.net.URLConnection;
-import java.nio.channels.Channels;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-import java.util.zip.GZIPInputStream;
-
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.IOException;
+import java.lang.reflect.Field;
+import java.net.HttpURLConnection;
+import java.net.ProtocolException;
+import java.net.URL;
+import java.net.URLConnection;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
+import static com.braintreepayments.http.serializer.StreamUtils.readStream;
+import static com.braintreepayments.http.serializer.StreamUtils.writeOutputStream;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
-import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class HttpClient {
 
@@ -37,8 +29,6 @@ public class HttpClient {
 	private int mReadTimeout;
 	private Environment mEnvironment;
 	private Encoder encoder;
-
-	public static final String CRLF = "\r\n";
 
 	List<Injector> mInjectors;
 
@@ -94,7 +84,7 @@ public class HttpClient {
 		}
 	}
 
-	protected String serializeRequest(HttpRequest request) throws IOException {
+	protected byte[] serializeRequest(HttpRequest request) throws IOException {
 		return encoder.encode(request);
 	}
 
@@ -107,48 +97,9 @@ public class HttpClient {
 			injector.inject(request);
 		}
 
-		HttpURLConnection connection = null;
+		HttpURLConnection connection = getConnection(request);
 		try {
-			connection = getConnection(request);
-
-			if (request.requestBody() != null) {
-				connection.setDoOutput(true);
-
-				String contentType = request.headers().header(Headers.CONTENT_TYPE);
-				if (contentType != null && contentType.startsWith("multipart/")) {
-					if (!(request.requestBody() instanceof Map)) {
-						throw new IOException("Request requestBody must be Map<String, Object> when Content-Type is multipart/*");
-					} else {
-						String boundary = "boundary" + System.currentTimeMillis();
-						contentType = contentType + "; boundary=" + boundary;
-						connection.setRequestProperty(Headers.CONTENT_TYPE, contentType); // Rewrite header with boundary
-
-						Map<String, Object> body = (Map<String, Object>) request.requestBody();
-						for (String key : body.keySet()) {
-							Object value = body.get(key);
-							if (value instanceof File) {
-								addFilePart(connection.getOutputStream(), key, (File) value, boundary);
-							} else {
-								addFormPart(connection.getOutputStream(), key, String.valueOf(value), boundary);
-							}
-						}
-
-						writeOutputStream(connection.getOutputStream(), "--" + boundary + "--");
-						writeOutputStream(connection.getOutputStream(), CRLF);
-						writeOutputStream(connection.getOutputStream(), CRLF);
-					}
-				} else {
-					String data;
-					if (request.requestBody() instanceof String) {
-						data = (String) request.requestBody();
-					} else {
-						data = serializeRequest(request);
-					}
-
-					writeOutputStream(connection.getOutputStream(), data);
-				}
-			}
-			return parseResponse(connection, request.responseClass());
+			return parseResponse(getConnection(request), request.responseClass());
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
@@ -156,38 +107,7 @@ public class HttpClient {
 		}
 	}
 
-	private void writePartHeader(OutputStream writer, String name, String filename, String boundary) throws IOException {
-		writeOutputStream(writer,"--" + boundary);
-		writeOutputStream(writer, CRLF);
-		writeOutputStream(writer, "Content-Disposition: form-data; name=\"" + name + "\"");
-		if (filename != null) {
-			writeOutputStream(writer, "; filename=\"" + filename + "\"");
-			writeOutputStream(writer, CRLF);
-			writeOutputStream(writer, "Content-Type: " + URLConnection.guessContentTypeFromName(filename));
-		}
-		writeOutputStream(writer, CRLF);
-		writeOutputStream(writer, CRLF);
-	}
-
-	private void addFormPart(OutputStream writer, String key, String value, String boundary) throws IOException {
-		writePartHeader(writer, key, null, boundary);
-
-		writeOutputStream(writer, value);
-		writeOutputStream(writer, CRLF);
-	}
-
-	private void addFilePart(OutputStream writer, String key, File uploadFile, String boundary)
-			throws IOException {
-		String filename = uploadFile.getName();
-		writePartHeader(writer, key, filename, boundary);
-
-		new FileInputStream(uploadFile).getChannel()
-				.transferTo(0, uploadFile.length(), Channels.newChannel(writer));
-
-		writeOutputStream(writer, CRLF);
-	}
-
-	void applyHeadersFromRequest(HttpRequest request, URLConnection connection) {
+	private void applyHeadersFromRequest(HttpURLConnection connection, HttpRequest request) {
 		for (String key: request.headers()) {
 			connection.setRequestProperty(key, request.headers().header(key));
 		}
@@ -195,7 +115,6 @@ public class HttpClient {
 
 	HttpURLConnection getConnection(HttpRequest request) throws IOException {
 		HttpURLConnection connection = (HttpURLConnection) new URL(mEnvironment.baseUrl() + request.path()).openConnection();
-		applyHeadersFromRequest(request, connection);
 
 		if (connection instanceof HttpsURLConnection) {
 			if (mSSLSocketFactory == null) {
@@ -209,6 +128,15 @@ public class HttpClient {
 		connection.setConnectTimeout(getConnectTimeout());
 
 		setRequestVerb(request.verb(), connection);
+		if (request.requestBody() != null) {
+			connection.setDoOutput(true);
+			byte[] data = serializeRequest(request);
+
+			applyHeadersFromRequest(connection, request);
+			writeOutputStream(connection.getOutputStream(), data);
+		} else {
+			applyHeadersFromRequest(connection, request);
+		}
 
 		return connection;
 	}
@@ -247,14 +175,6 @@ public class HttpClient {
 		}
 	}
 
-	private void writeOutputStream(OutputStream outputStream, String data) throws IOException {
-		writeOutputStream(outputStream, data.getBytes());
-	}
-
-	private void writeOutputStream(OutputStream outputStream, byte[] data) throws IOException {
-		outputStream.write(data);
-	}
-
 	Headers parseResponseHeaders(URLConnection connection) {
 		Headers headers = new Headers();
 		for (String key : connection.getHeaderFields().keySet()) {
@@ -265,14 +185,12 @@ public class HttpClient {
 	}
 
 	private <T> HttpResponse<T> parseResponse(HttpURLConnection connection, Class<T> responseClass) throws IOException {
-		boolean gzip = "gzip".equals(connection.getContentEncoding());
-
 		Headers responseHeaders = parseResponseHeaders(connection);
 		String responseBody;
 		int statusCode;
 		statusCode = connection.getResponseCode();
 		if (statusCode >= HTTP_OK && statusCode <= HTTP_PARTIAL) {
-			responseBody = readStream(connection.getInputStream(), gzip);
+			responseBody = readStream(connection.getInputStream(), connection.getContentEncoding());
 
 			T deserializedResponse = null;
 			if (responseBody.length() > 0 && !Void.class.isAssignableFrom(responseClass)) {
@@ -285,32 +203,8 @@ public class HttpClient {
 
 			return new HttpResponse<>(responseHeaders, statusCode, deserializedResponse);
 		} else {
-			responseBody = readStream(connection.getErrorStream(), gzip);
+			responseBody = readStream(connection.getErrorStream(), connection.getContentEncoding());
 			throw new HttpException(responseBody, statusCode, responseHeaders);
-		}
-	}
-
-	private String readStream(InputStream in, boolean gzip) throws IOException {
-		if (in == null) {
-			return null;
-		}
-
-		try {
-			if (gzip) {
-				in = new GZIPInputStream(in);
-			}
-
-			ByteArrayOutputStream out = new ByteArrayOutputStream();
-			byte[] buffer = new byte[1024];
-			for (int count; (count = in.read(buffer)) != -1; ) {
-				out.write(buffer, 0, count);
-			}
-
-			return new String(out.toByteArray(), UTF_8);
-		} finally {
-			try {
-				in.close();
-			} catch (IOException ignored) {}
 		}
 	}
 
