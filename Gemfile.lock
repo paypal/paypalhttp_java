@@ -1,22 +1,7 @@
-GEM
-  remote: https://rubygems.org/
+GIT
+  remote: git@github.com:paypal/releasinator.git
+  revision: 114aa3170e2f86c74c24de75c0807c41c3b5c540
   specs:
-    addressable (2.5.1)
-      public_suffix (~> 2.0, >= 2.0.2)
-    colorize (0.8.1)
-    commonmarker (0.14.15)
-      ruby-enum (~> 0.5)
-    configatron (4.5.1)
-    faraday (0.13.0)
-      multipart-post (>= 1.2, < 3)
-    github-markup (1.6.1)
-    i18n (0.8.6)
-    json (1.8.6)
-    multipart-post (2.0.0)
-    octokit (4.7.0)
-      sawyer (~> 0.8.0, >= 0.5.3)
-    public_suffix (2.0.5)
-    rake (12.0.0)
     releasinator (0.6.4)
       colorize (~> 0.7)
       configatron (~> 4.5)
@@ -24,6 +9,26 @@ GEM
       octokit (~> 4.0)
       semantic (~> 1.4)
       vandamme (~> 0.0.11)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    addressable (2.5.2)
+      public_suffix (>= 2.0.2, < 4.0)
+    colorize (0.8.1)
+    commonmarker (0.14.15)
+      ruby-enum (~> 0.5)
+    configatron (4.5.1)
+    faraday (0.13.1)
+      multipart-post (>= 1.2, < 3)
+    github-markup (1.6.1)
+    i18n (0.8.6)
+    json (1.8.6)
+    multipart-post (2.0.0)
+    octokit (4.7.0)
+      sawyer (~> 0.8.0, >= 0.5.3)
+    public_suffix (3.0.0)
+    rake (12.0.0)
     ruby-enum (0.7.1)
       i18n
     sawyer (0.8.1)
@@ -39,10 +44,10 @@ PLATFORMS
 
 DEPENDENCIES
   rake
-  releasinator (= 0.6.4)
+  releasinator!
 
 RUBY VERSION
    ruby 2.4.0p0
 
 BUNDLED WITH
-   1.15.3
+   1.15.4
