@@ -7,6 +7,15 @@ buildscript {
     }
 }
 
+// Global methods
+def getRepositoryUsername() {
+  return System.properties.containsKey('sonatypeUsername') ? System.properties['sonatypeUsername'] : System.env.containsKey('SONATYPE_USERNAME') ? System.env['SONATYPE_USERNAME'] : ""
+}
+
+def getRepositoryPassword() {
+  return System.properties.containsKey('sonatypePassword') ? System.properties['sonatypePassword'] : System.env.containsKey('SONATYPE_PASSWORD') ? System.env['SONATYPE_PASSWORD'] : ""
+}
+
 allprojects {
     apply plugin: 'java'
 
@@ -33,18 +42,16 @@ allprojects {
         sign configurations.archives
     }
 
-    def sonatypeUsername = System.properties.containsKey('sonatypeUsername') ? System.properties['sonatypeUsername'] : ''
-    def sonatypePassword = System.properties.containsKey('sonatypePassword') ? System.properties['sonatypePassword'] : ''
     uploadArchives {
         repositories {
             mavenDeployer {
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
                 repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
                 }
                 snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-                    authentication(userName: sonatypeUsername, password: sonatypePassword)
+                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
                 }
 
                 pom.project {
