@@ -3,4 +3,4 @@ source "https://rubygems.org"
 ruby "2.4"
 
 gem "rake"
-gem "releasinator", :git => "git@github.com:paypal/releasinator.git"
+gem "releasinator", '0.7.0'

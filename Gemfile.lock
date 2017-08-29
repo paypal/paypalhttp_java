@@ -1,15 +1,3 @@
-GIT
-  remote: git@github.com:paypal/releasinator.git
-  revision: 114aa3170e2f86c74c24de75c0807c41c3b5c540
-  specs:
-    releasinator (0.6.4)
-      colorize (~> 0.7)
-      configatron (~> 4.5)
-      json (~> 1.8)
-      octokit (~> 4.0)
-      semantic (~> 1.4)
-      vandamme (~> 0.0.11)
-
 GEM
   remote: https://rubygems.org/
   specs:
@@ -29,6 +17,13 @@ GEM
       sawyer (~> 0.8.0, >= 0.5.3)
     public_suffix (3.0.0)
     rake (12.0.0)
+    releasinator (0.7.0)
+      colorize (~> 0.7)
+      configatron (~> 4.5)
+      json (~> 1.8)
+      octokit (~> 4.0)
+      semantic (~> 1.4)
+      vandamme (~> 0.0.11)
     ruby-enum (0.7.1)
       i18n
     sawyer (0.8.1)
@@ -44,7 +39,7 @@ PLATFORMS
 
 DEPENDENCIES
   rake
-  releasinator!
+  releasinator (= 0.7.0)
 
 RUBY VERSION
    ruby 2.4.0p0
