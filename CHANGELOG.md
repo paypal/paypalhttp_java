@@ -1,3 +1,7 @@
+## 1.2.10
+* Support text/* Content-Type natively.
+* Release scripting using releasinator.
+
 ## 1.2.9
 * Update release step to release modules separately.
 
