@@ -23,73 +23,68 @@ import static java.net.HttpURLConnection.HTTP_PARTIAL;
 
 public class HttpClient {
 
-	private SSLSocketFactory mSSLSocketFactory;
-	private String mUserAgent;
-	private int mConnectTimeout;
-	private int mReadTimeout;
-	private Environment mEnvironment;
+	private SSLSocketFactory sslSocketFactory;
+	private String userAgent;
+	private int connectTimeout;
+	private int readTimeout;
+	private Environment environment;
 	private Encoder encoder;
 
 	List<Injector> mInjectors;
 
 	public HttpClient(Environment environment) {
-		mReadTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
-		mConnectTimeout = mReadTimeout;
-		mUserAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
-		mInjectors = new ArrayList<>();
-		mEnvironment = environment;
-		encoder = new Encoder();
+		this.readTimeout =  (int) TimeUnit.SECONDS.toMillis(30);
+		this.connectTimeout = readTimeout;
+		this.userAgent = "Java HTTP/1.1"; // TODO: add version string to build.gradle
+		this.mInjectors = new ArrayList<>();
+		this.environment = environment;
+		this.encoder = new Encoder();
+
 		addInjector(this::injectStandardHeaders);
 
 		try {
-			mSSLSocketFactory = new TLSSocketFactory();
+			sslSocketFactory = new TLSSocketFactory();
 		} catch (SSLException e) {
-			mSSLSocketFactory = null;
+			sslSocketFactory = null;
 		}
 	}
 
 	/**
 	 * Override this method in a custom subclass to use a custom connect timeout value.
 	 */
-	protected int getConnectTimeout() { return mConnectTimeout; }
+	protected int getConnectTimeout() { return connectTimeout; }
 
 	/**
 	 * Override this method in a custom subclass to use a custom read timeout value.
 	 */
-	protected int getReadTimeout() { return mReadTimeout; }
+	protected int getReadTimeout() { return readTimeout; }
 
 	/**
 	 * Override this method in a custom subclass to use a SSLSocketFactory.
 	 */
-	protected SSLSocketFactory getSSLSocketFactory() { return mSSLSocketFactory; }
+	protected SSLSocketFactory getSSLSocketFactory() { return sslSocketFactory; }
 
 	/**
 	 * Override this method in a custom subclass to use a User Agent.
 	 */
-	protected String getUserAgent() { return mUserAgent; }
+	protected String getUserAgent() { return userAgent; }
 
-	protected Environment getEnvironment() { return mEnvironment; }
+	public Encoder getEncoder() { return encoder; }
 
-	public void setSSLSocketFactory(SSLSocketFactory factory) { mSSLSocketFactory = factory; }
+	protected Environment getEnvironment() { return environment; }
 
-	public void setUserAgent(String userAgent) { mUserAgent = userAgent; }
+	public void setSSLSocketFactory(SSLSocketFactory factory) { sslSocketFactory = factory; }
 
-	public void setConnectTimeout(int connectTimeout) { mConnectTimeout = connectTimeout; }
+	public void setUserAgent(String userAgent) { this.userAgent = userAgent; }
 
-	public void setReadTimeout(int readTimeout) { mReadTimeout = readTimeout; }
+	public void setConnectTimeout(int connectTimeout) { this.connectTimeout = connectTimeout; }
+
+	public void setReadTimeout(int readTimeout) { this.readTimeout = readTimeout; }
 
 	public synchronized void addInjector(Injector injector) {
 		if (injector != null) {
 			mInjectors.add(injector);
 		}
-	}
-
-	protected byte[] serializeRequest(HttpRequest request) throws IOException {
-		return encoder.encode(request);
-	}
-
-	protected <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
-		return encoder.decode(responseBody, responseClass, headers);
 	}
 
 	public <T> HttpResponse<T> execute(HttpRequest<T> request) throws IOException {
@@ -114,10 +109,10 @@ public class HttpClient {
 	}
 
 	HttpURLConnection getConnection(HttpRequest request) throws IOException {
-		HttpURLConnection connection = (HttpURLConnection) new URL(mEnvironment.baseUrl() + request.path()).openConnection();
+		HttpURLConnection connection = (HttpURLConnection) new URL(environment.baseUrl() + request.path()).openConnection();
 
 		if (connection instanceof HttpsURLConnection) {
-			if (mSSLSocketFactory == null) {
+			if (sslSocketFactory == null) {
 				throw new SSLException("SSLSocketFactory was not set or failed to initialize");
 			}
 
@@ -130,7 +125,7 @@ public class HttpClient {
 		setRequestVerb(request.verb(), connection);
 		if (request.requestBody() != null) {
 			connection.setDoOutput(true);
-			byte[] data = serializeRequest(request);
+			byte[] data = encoder.encode(request);
 
 			applyHeadersFromRequest(connection, request);
 			writeOutputStream(connection.getOutputStream(), data);
@@ -197,7 +192,7 @@ public class HttpClient {
 				if (responseClass.isAssignableFrom(responseBody.getClass())) {
 					deserializedResponse = (T) responseBody;
 				} else {
-					deserializedResponse = deserializeResponse(responseBody, responseClass, responseHeaders);
+					deserializedResponse = encoder.decode(responseBody, responseClass, responseHeaders);
 				}
 			}
 
