@@ -21,8 +21,8 @@ public class EncoderTest {
 		Encoder encoder = new Encoder();
 
 		try {
-			encoder.encode(request);
-			fail("Expected encode to throw IOException");
+			encoder.serializeRequest(request);
+			fail("Expected serializeRequest to throw IOException");
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
 			assertEquals(ioe.getMessage(), "Body class Void must implement Serializable, Map, List, or String");
@@ -38,8 +38,8 @@ public class EncoderTest {
 		Encoder encoder = new Encoder();
 
 		try {
-			encoder.encode(request);
-			fail("Expected encode to throw IOException");
+			encoder.serializeRequest(request);
+			fail("Expected serializeRequest to throw IOException");
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
 			assertEquals(ioe.getMessage(), "Unable to serialize request with Content-Type: not application/json. Supported encodings are: [^application\\/json$, ^text\\/.*, ^multipart\\/.*]");
@@ -54,7 +54,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		String s = new String(encoder.encode(request));
+		String s = new String(encoder.serializeRequest(request));
 		assertNotEquals(s, "");
 	}
 
@@ -66,7 +66,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		String s = new String(encoder.encode(request));
+		String s = new String(encoder.serializeRequest(request));
 		assertEquals(s, "some text");
 	}
 
@@ -80,7 +80,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		String s = new String(encoder.encode(request));
+		String s = new String(encoder.serializeRequest(request));
 		assertNotEquals(s, "");
 	}
 
@@ -94,7 +94,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		String s = new String(encoder.encode(request));
+		String s = new String(encoder.serializeRequest(request));
 		assertEquals(s, "{\"one\":\"two\"}");
 	}
 
@@ -107,7 +107,7 @@ public class EncoderTest {
 		Encoder encoder = new Encoder();
 
 		try {
-			Object o = encoder.decode(response, Object.class, headers);
+			Object o = encoder.deserializeResponse(response, Object.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
 			assertEquals(ioe.getMessage(), "Destination class Object must implement Deserializable, Map, List, or String");
@@ -123,7 +123,7 @@ public class EncoderTest {
 		Encoder encoder = new Encoder();
 
 		try {
-			Zoo z = encoder.decode(response, Zoo.class, headers);
+			Zoo z = encoder.deserializeResponse(response, Zoo.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
 			assertEquals(ioe.getMessage(), "Unable to deserialize response with Content-Type: not application/json. Supported decodings are: [^application\\/json$, ^text\\/.*, ^multipart\\/.*]");
@@ -138,7 +138,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		Zoo s = encoder.decode(response, Zoo.class, headers);
+		Zoo s = encoder.deserializeResponse(response, Zoo.class, headers);
 
 		assertEquals(s.name, "Brian Tree");
 	}
@@ -151,7 +151,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		String s = encoder.decode(response, String.class, headers);
+		String s = encoder.deserializeResponse(response, String.class, headers);
 
 		assertEquals(s, response);
 	}

@@ -22,7 +22,7 @@ public class Encoder {
 		registerSerializer(new Multipart());
 	}
 
-	public byte[] encode(HttpRequest request) throws IOException {
+	public byte[] serializeRequest(HttpRequest request) throws IOException {
 		String contentType = request.headers().header(Headers.CONTENT_TYPE);
 		if (contentType != null) {
 			Serializer serializer = serializer(contentType);
@@ -41,7 +41,7 @@ public class Encoder {
 		}
 	}
 
-	public <T> T decode(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
+	public <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
 		String contentType = headers.header(Headers.CONTENT_TYPE);
 		if (contentType != null) {
 			Serializer serializer = serializer(contentType);
