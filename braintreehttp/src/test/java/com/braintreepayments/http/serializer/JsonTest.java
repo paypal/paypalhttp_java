@@ -1,6 +1,8 @@
 package com.braintreepayments.http.serializer;
 
 import com.braintreepayments.http.Zoo;
+import com.braintreepayments.http.annotations.Model;
+import com.braintreepayments.http.annotations.SerializedName;
 import com.braintreepayments.http.exceptions.JsonParseException;
 import com.braintreepayments.http.exceptions.SerializeException;
 import org.testng.annotations.Test;
@@ -70,30 +72,14 @@ public class JsonTest {
 
     @Test()
     public void testJson_serializesArrays() throws SerializeException {
-        class Base implements Serializable {
-            private String[] array = {"value1", "value2"};
 
-            @Override
-            public void serialize(Map<String, Object> map) {
-                map.put("array", this.array);
-            }
+    	@Model
+        class Base {
+        	@SerializedName(value = "array", listClass = String.class)
+            private List<String> array = new ArrayList<String>() {{ add("value1"); add("value2"); }};
         }
 
         String expected = "{\"array\":[\"value1\",\"value2\"]}";
-        String actual = new Json().serialize(new Base());
-        assertEquals(actual, expected);
-    }
-
-    @Test()
-    public void testJson_serializesNull() throws SerializeException {
-        class Base implements Serializable {
-            @Override
-			public void serialize(Map<String, Object> map) {
-                map.put("null_value", null);
-            }
-        }
-
-        String expected = "{\"null_value\":null}";
         String actual = new Json().serialize(new Base());
         assertEquals(actual, expected);
     }

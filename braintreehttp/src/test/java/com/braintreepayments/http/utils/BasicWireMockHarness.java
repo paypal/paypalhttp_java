@@ -47,13 +47,16 @@ public class BasicWireMockHarness extends WireMockHarness {
 		Integer statusCode = null;
 		Map<String, String> responseHeaders = null;
 		if (response != null) {
-			if (response.result() instanceof String) {
-				responseBody = (String) response.result();
-			} else {
-				try {
-					responseBody = new Json().serialize(response.result());
-				} catch (SerializeException e) {}
+			if (response.result() != null) {
+				if (response.result() instanceof String) {
+					responseBody = (String) response.result();
+				} else {
+					try {
+						responseBody = new Json().serialize(response.result());
+					} catch (SerializeException ignored) {}
+				}
 			}
+
 			statusCode = response.statusCode();
 			responseHeaders = translateHeaders(response.headers());
 		}

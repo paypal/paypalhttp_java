@@ -2,8 +2,6 @@ package com.braintreepayments.http;
 
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
-import com.braintreepayments.http.serializer.Deserializable;
-import com.braintreepayments.http.serializer.Serializable;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
@@ -435,35 +433,10 @@ public class HttpClientTest extends BasicWireMockHarness {
 		return new HttpRequest<>("/", "GET", String.class);
 	}
 
-	private class SampleObject implements Serializable, Deserializable {
-
-		public SampleObject() {
-		}
+	private class SampleObject {
+		public SampleObject() {}
 
 		public String name;
 		public Integer age;
-
-		@Override
-		public void deserialize(Map<String, Object> fields) {
-			if (fields.containsKey("name")) {
-				name = (String) fields.get("name");
-			}
-
-			if (fields.containsKey("age")) {
-				age = (Integer) fields.get("age");
-			}
-		}
-
-		@Override
-		public void serialize(Map<String, Object> serialized) {
-			if (age != null) {
-				serialized.put("age", age);
-			}
-
-			if (name != null) {
-				serialized.put("name", name);
-			}
-		}
 	}
-
 }

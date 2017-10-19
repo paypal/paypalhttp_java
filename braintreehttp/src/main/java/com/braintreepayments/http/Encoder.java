@@ -1,12 +1,14 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.serializer.*;
+import com.braintreepayments.http.serializer.Json;
+import com.braintreepayments.http.serializer.Multipart;
+import com.braintreepayments.http.serializer.Serializer;
+import com.braintreepayments.http.serializer.Text;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 
 public class Encoder {
 
@@ -28,13 +30,8 @@ public class Encoder {
 			Serializer serializer = serializer(contentType);
 			if (serializer == null) {
 				throw new UnsupportedEncodingException(String.format("Unable to serialize request with Content-Type: %s. Supported encodings are: %s", request.headers().header(Headers.CONTENT_TYPE), supportedEncodings()));
-			} else if (request.requestBody() instanceof Serializable ||
-					request.requestBody() instanceof List ||
-					request.requestBody() instanceof Map ||
-					request.requestBody() instanceof String) {
-				return serializer.serialize(request);
 			} else {
-				throw new UnsupportedEncodingException(String.format("Body class %s must implement Serializable, Map, List, or String", request.responseClass().getSimpleName()));
+				return serializer.serialize(request);
 			}
 		} else {
 			throw new UnsupportedEncodingException("HttpRequest does not have Content-Type header set");
@@ -47,13 +44,8 @@ public class Encoder {
 			Serializer serializer = serializer(contentType);
 			if (serializer == null) {
 				throw new UnsupportedEncodingException(String.format("Unable to deserialize response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedEncodings()));
-			} else if (Deserializable.class.isAssignableFrom(responseClass) ||
-					Map.class.isAssignableFrom(responseClass) ||
-					List.class.isAssignableFrom(responseClass) ||
-					String.class.isAssignableFrom(responseClass)) {
-				return serializer.deserialize(responseBody, responseClass);
 			} else {
-				throw new UnsupportedEncodingException(String.format("Destination class %s must implement Deserializable, Map, List, or String", responseClass.getSimpleName()));
+				return serializer.deserialize(responseBody, responseClass);
 			}
 		} else {
 			throw new UnsupportedEncodingException("HttpResponse does not have Content-Type header set");

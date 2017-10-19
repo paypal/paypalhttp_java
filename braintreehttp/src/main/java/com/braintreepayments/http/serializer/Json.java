@@ -6,6 +6,7 @@ import com.braintreepayments.http.exceptions.SerializeException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
+import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 public class Json implements Serializer {
@@ -30,12 +31,9 @@ public class Json implements Serializer {
 			return (T) deserializeInternal(source);
 		} else {
 			try {
-				Deserializable destination = (Deserializable) cls.newInstance();
 				Map<String, Object> deserialized = (Map<String, Object>) deserializeInternal(source);
-				destination.deserialize(deserialized);
-
-				return (T) destination;
-			} catch (IllegalAccessException | InstantiationException e) {
+				return ObjectMapper.unmap(deserialized, cls);
+			} catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
 				throw new UnsupportedEncodingException(e.getMessage());
 			} catch (RuntimeException re) {
 				throw new JsonParseException("Unable to parse Json " + re.getMessage());
@@ -49,10 +47,12 @@ public class Json implements Serializer {
 	}
 
 	public String serialize(Object o) throws SerializeException {
-		if (o instanceof Serializable) {
-			Map<String, Object> map = new HashMap<>();
-			((Serializable) o).serialize(map);
-			return jsonValueStringFor(map);
+		if (ObjectMapper.isModel(o)) {
+			try {
+				return jsonValueStringFor(ObjectMapper.map(o));
+			} catch (IllegalAccessException e) {
+				throw new SerializeException(e.getMessage());
+			}
 		} else {
 			return jsonValueStringFor(o);
 		}
@@ -118,12 +118,12 @@ public class Json implements Serializer {
 			}
 
 			builder.append(LIST_TOKEN_CLOSE);
-		} else if (obj instanceof Serializable) {
-			builder.append(serialize(obj));
 		} else if (obj instanceof Map) {
 			builder.append(serializeObjectInternal((Map<String, Object>) obj));
+		} else if (ObjectMapper.isModel(obj)) {
+			builder.append(serialize(obj));
 		} else {
-			throw new SerializeException(String.format("Object of class %s could not be JSON-serialized", obj.getClass()));
+			throw new SerializeException(String.format("Object of class %s could not be serialized as json", obj.getClass()));
 		}
 
 		return builder.toString();

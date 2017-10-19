@@ -13,23 +13,6 @@ import static org.testng.Assert.*;
 public class EncoderTest {
 
 	@Test
-	public void testEncoder_encode_throwsForNonSerializableBodyType() throws UnsupportedEncodingException {
-		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
-		request.header("Content-Type", "application/json");
-		request.requestBody(new Object());
-
-		Encoder encoder = new Encoder();
-
-		try {
-			encoder.serializeRequest(request);
-			fail("Expected serializeRequest to throw IOException");
-		} catch (IOException ioe) {
-			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Body class Void must implement Serializable, Map, List, or String");
-		}
-	}
-
-	@Test
 	public void testEncoder_encode_throwsForUnsupportedContentType() throws IOException {
 		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
 		request.header("Content-Type", "not application/json");
