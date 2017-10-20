@@ -1,4 +1,7 @@
-## 1.2.11
+## 1.2.10
+* Bumping version.
+
+## 1.2.10
 * Support text/* Content-Type natively.
 * Release scripting using releasinator.
 * Add serialization annotation, remove serialize/deserialize interfaces.
