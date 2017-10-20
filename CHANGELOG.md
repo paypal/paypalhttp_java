@@ -1,4 +1,4 @@
-## 1.2.10
+## 1.2.11
 * Support text/* Content-Type natively.
 * Release scripting using releasinator.
 * Add serialization annotation, remove serialize/deserialize interfaces.
