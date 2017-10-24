@@ -62,6 +62,10 @@ public class Encoder {
 	}
 
 	private Serializer serializer(String contentType) {
+		if (contentType.contains(";")) {
+			contentType = contentType.split(";")[0];
+		}
+
 		for (Serializer s : serializers) {
 			if (contentType.matches(s.contentType())) {
 				return s;

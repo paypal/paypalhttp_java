@@ -127,6 +127,19 @@ public class EncoderTest {
 	}
 
 	@Test
+	public void testEncoder_decode_json_withCharset() throws IOException {
+		String response = "{\"name\":\"Brian Tree\"}";
+		Headers headers = new Headers();
+		headers.header("Content-Type", "application/json; charset=utf-8");
+
+		Encoder encoder = new Encoder();
+
+		Zoo s = encoder.deserializeResponse(response, Zoo.class, headers);
+
+		assertEquals(s.name, "Brian Tree");
+	}
+
+	@Test
 	public void testEncoder_decode_text() throws IOException {
 		String response = "<h1>Hello!</h1>";
 		Headers headers = new Headers();

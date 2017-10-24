@@ -21,7 +21,7 @@ public class Json implements Serializer {
 
 	@Override
 	public String contentType() {
-		return "^application\\/json$";
+		return "^application\\/json";
 	}
 
 	@Override
