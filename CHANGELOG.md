@@ -1,3 +1,6 @@
+## 1.2.12
+* Fix issue where numeric types were deserialized incorrectly.
+
 ## 1.2.11
 * Bumping version.
 
