@@ -25,7 +25,7 @@ public class EncoderTest {
 			fail("Expected serializeRequest to throw IOException");
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Unable to serialize request with Content-Type: not application/json. Supported encodings are: [^application\\/json$, ^text\\/.*, ^multipart\\/.*]");
+			assertEquals(ioe.getMessage(), "Unable to serialize request with Content-Type: not application/json. Supported encodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
 		}
 	}
 
@@ -109,7 +109,7 @@ public class EncoderTest {
 			Zoo z = encoder.deserializeResponse(response, Zoo.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Unable to deserialize response with Content-Type: not application/json. Supported decodings are: [^application\\/json$, ^text\\/.*, ^multipart\\/.*]");
+			assertEquals(ioe.getMessage(), "Unable to deserialize response with Content-Type: not application/json. Supported decodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
 		}
 	}
 
