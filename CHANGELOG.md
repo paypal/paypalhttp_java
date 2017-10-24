@@ -1,3 +1,6 @@
+## 1.2.13
+* Fix issue where content-types were not matched when a charset was present.
+
 ## 1.2.12
 * Fix issue where numeric types were deserialized incorrectly.
 
