@@ -43,7 +43,7 @@ public class JsonTest {
                 fish
         );
 
-        String expected = "{\"name\":\"Monterey Bay Aquarium\",\"animal\":{\"locales\":[\"ocean\",\"lake\"],\"kind\":\"swimmy\",\"carnivorous\":false,\"weight\":10,\"age\":3,\"appendages\":{\"Dorsal fin\":{\"size\":2,\"location\":\"back\"},\"Ventral fin\":{\"size\":2,\"location\":\"front\"}}},\"number_of_animals\":1}";
+        String expected = "{\"name\":\"Monterey Bay Aquarium\",\"animal\":{\"locales\":[\"ocean\",\"lake\"],\"kind\":\"swimmy\",\"carnivorous\":false,\"weight\":10.0,\"age\":3,\"appendages\":{\"Dorsal fin\":{\"size\":2,\"location\":\"back\"},\"Ventral fin\":{\"size\":2,\"location\":\"front\"}}},\"number_of_animals\":1}";
 
         String s = new Json().serialize(zoo);
         assertEquals(s, expected);
@@ -222,7 +222,7 @@ public class JsonTest {
        assertEquals(1, zoo.numberOfAnimals.intValue());
        assertEquals("swimmy", zoo.animal.kind);
        assertEquals(3, zoo.animal.age.intValue());
-       assertEquals(10, zoo.animal.weight.intValue());
+       assertEquals(10.0, zoo.animal.weight);
        assertEquals("back", zoo.animal.appendages.dorsalFin.location);
        assertEquals(2, zoo.animal.appendages.dorsalFin.size.intValue());
        assertEquals("front", zoo.animal.appendages.ventralFin.location);

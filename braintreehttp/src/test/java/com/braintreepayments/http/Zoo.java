@@ -52,7 +52,7 @@ public class Zoo {
 		public Integer age;
 
 		@SerializedName("weight")
-		public Integer weight;
+		public Double weight;
 
 		@SerializedName("appendages")
 		public Fins appendages;
@@ -66,7 +66,7 @@ public class Zoo {
 		public Animal(
 				String kind,
 				Integer age,
-				int weight,
+				double weight,
 				Fins appendages,
 				List<String> locales,
 				Boolean carnivorous

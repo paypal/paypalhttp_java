@@ -64,7 +64,11 @@ public class ObjectMapper {
 			f.setAccessible(true);
 
 			if (isPrimitive(value)) {
-				f.set(instance, value);
+				if (isNumeric(f.getType())) {
+					f.set(instance, numericCast(f.getType(), (Number) value));
+				} else {
+					f.set(instance, value);
+				}
 			} else if (value instanceof List) {
 				Class listClass = sn.listClass();
 				if (listClass.equals(Void.class)) {
@@ -117,11 +121,37 @@ public class ObjectMapper {
 		return cls.isPrimitive() || isWrapperType(cls);
 	}
 
+	private static boolean isNumeric(Class cls) {
+		return NUMERIC_TYPES.contains(cls);
+	}
+
+	private static Object numericCast(Class dest, Number o) {
+		if (dest.equals(Byte.class)) {
+			return o.byteValue();
+		} else if (dest.equals(Short.class)) {
+			return o.shortValue();
+		} else if (dest.equals(Integer.class)) {
+			return o.intValue();
+	 	} else if (dest.equals(Long.class)) {
+			return o.longValue();
+		} else if (dest.equals(Float.class)) {
+			return o.floatValue();
+		} else if (dest.equals(Double.class)) {
+			return o.doubleValue();
+		}
+
+		return null;
+	}
+
 	@SuppressWarnings("unchecked")
 	private static final Set<Class> WRAPPER_TYPES = new HashSet(Arrays.asList(
 			Boolean.class, Character.class, Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class, String.class, Void.class));
 
-	public static boolean isWrapperType(Class cls) {
+	@SuppressWarnings("unchecked")
+	private static final Set<Class> NUMERIC_TYPES = new HashSet(Arrays.asList(
+			Byte.class, Short.class, Integer.class, Long.class, Float.class, Double.class));
+
+	private static boolean isWrapperType(Class cls) {
 		return WRAPPER_TYPES.contains(cls);
 	}
 }
