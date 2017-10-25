@@ -94,7 +94,7 @@ public class HttpClient {
 
 		HttpURLConnection connection = getConnection(request);
 		try {
-			return parseResponse(getConnection(request), request.responseClass());
+			return parseResponse(connection, request.responseClass());
 		} finally {
 			if (connection != null) {
 				connection.disconnect();
