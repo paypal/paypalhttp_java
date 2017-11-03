@@ -88,13 +88,15 @@ public class HttpClient {
 	}
 
 	public <T> HttpResponse<T> execute(HttpRequest<T> request) throws IOException {
+		HttpRequest<T> requestCopy = request.copy();
+
 		for (Injector injector : mInjectors) {
-			injector.inject(request);
+			injector.inject(requestCopy);
 		}
 
-		HttpURLConnection connection = getConnection(request);
+		HttpURLConnection connection = getConnection(requestCopy);
 		try {
-			return parseResponse(connection, request.responseClass());
+			return parseResponse(connection, requestCopy.responseClass());
 		} finally {
 			if (connection != null) {
 				connection.disconnect();

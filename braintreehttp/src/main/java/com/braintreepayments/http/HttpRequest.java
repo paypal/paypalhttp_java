@@ -53,4 +53,15 @@ public class HttpRequest<T> {
 		headers.header(header, value);
 		return this;
 	}
+
+	public HttpRequest<T> copy() {
+		HttpRequest<T> other = new HttpRequest<T>(path, verb, responseClass);
+		for (String key: headers) {
+			other.header(key, headers.header(key));
+		}
+
+		other.body = body;
+
+		return other;
+	}
 }

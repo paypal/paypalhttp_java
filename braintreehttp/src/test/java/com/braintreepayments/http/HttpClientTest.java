@@ -249,7 +249,8 @@ public class HttpClientTest extends BasicWireMockHarness {
 		stub(request, null);
 
 		client.execute(request);
-		assertEquals(request.headers().header(USER_AGENT), "Java HTTP/1.1");
+		verify(getRequestedFor(urlEqualTo("/"))
+			.withHeader(USER_AGENT, equalTo("Java HTTP/1.1")));
 	}
 
 	@Test
@@ -265,6 +266,17 @@ public class HttpClientTest extends BasicWireMockHarness {
 	}
 
 	@Test
+	public void testHttpClient_execute_doesNotModifyOriginalRequest() throws IOException {
+		HttpRequest<String> request = simpleRequest();
+
+		stub(request, null);
+
+		client.execute(request);
+
+		assertFalse(request.headers().iterator().hasNext());
+	}
+
+	@Test
 	public void testHttpClient_addInjector_usesCustomInjectors() throws IOException {
 		client.addInjector(request -> {
 			request.header("Idempotency-Id", "abcd-uuid");
@@ -275,7 +287,8 @@ public class HttpClientTest extends BasicWireMockHarness {
 
 		client.execute(request);
 
-		assertEquals(request.headers().header("Idempotency-Id"), "abcd-uuid");
+		verify(getRequestedFor(urlEqualTo("/"))
+			.withHeader("Idempotency-Id", equalTo("abcd-uuid")));
 	}
 
 	@Test
@@ -305,7 +318,7 @@ public class HttpClientTest extends BasicWireMockHarness {
 	}
 
 	@Test
-	public void testHttpClient_pareseResponse_listResponse() throws IOException {
+	public void testHttpClient_parseResponse_listResponse() throws IOException {
 		HttpRequest<List> request = new HttpRequest<>("/whatever", "GET", List.class);
 
 		List<String> result = new ArrayList<String>() {{
