@@ -27,7 +27,7 @@ public class MultipartTest {
 				.file("file_test_text", resource("fileupload_test_text.txt").toFile())
 				.formData("some_field_key", "form_field=\"some_field_value\"");
 
-		String serialized = new String(multipart.serialize(request));
+		String serialized = new String(multipart.encode(request));
 
 		assertTrue(request.headers().header(Headers.CONTENT_TYPE).startsWith("multipart/form-data; boundary=boundary"));
 
@@ -44,7 +44,7 @@ public class MultipartTest {
 		FileUploadRequest request = simpleFileRequest()
 				.file("binary_file", resource("fileupload_test_binary.jpg").toFile());
 
-		byte[] data = multipart.serialize(request);
+		byte[] data = multipart.encode(request);
 		assertTrue(byteArrayContains(data, "Content-Disposition: form-data; name=\"binary_file\"; filename=\"fileupload_test_binary.jpg\"".getBytes()));
 		assertTrue(byteArrayContains(data, "Content-Type: image/jpeg".getBytes()));
 
@@ -58,7 +58,7 @@ public class MultipartTest {
 		request.requestBody(new Object());
 
 		try {
-			multipart.serialize(request);
+			multipart.encode(request);
 			fail("Http client should have thrown for non-Map requestBody");
 		} catch (IOException ioe) {
 			assertEquals("Request requestBody must be Map<String, Object> when Content-Type is multipart/*", ioe.getMessage());
@@ -68,10 +68,10 @@ public class MultipartTest {
 	@Test
 	public void testMultipart_deserialize_throwsWithUnsupportedEncodingException() throws IOException {
 		try {
-			multipart.deserialize("", "".getClass());
-			fail("Multipart should never deserialize a response of mulipart/*");
+			multipart.decode("", "".getClass());
+			fail("Multipart should never decode a response of mulipart/*");
 		} catch (IOException ioe) {
-			assertEquals("Unable to deserialize Content-Type: multipart/form-data.", ioe.getMessage());
+			assertEquals("Unable to decode Content-Type: multipart/form-data.", ioe.getMessage());
 		}
 	}
 

@@ -29,9 +29,9 @@ public class Encoder {
 		if (contentType != null) {
 			Serializer serializer = serializer(contentType);
 			if (serializer == null) {
-				throw new UnsupportedEncodingException(String.format("Unable to serialize request with Content-Type: %s. Supported encodings are: %s", request.headers().header(Headers.CONTENT_TYPE), supportedEncodings()));
+				throw new UnsupportedEncodingException(String.format("Unable to encode request with Content-Type: %s. Supported encodings are: %s", request.headers().header(Headers.CONTENT_TYPE), supportedEncodings()));
 			} else {
-				return serializer.serialize(request);
+				return serializer.encode(request);
 			}
 		} else {
 			throw new UnsupportedEncodingException("HttpRequest does not have Content-Type header set");
@@ -43,9 +43,9 @@ public class Encoder {
 		if (contentType != null) {
 			Serializer serializer = serializer(contentType);
 			if (serializer == null) {
-				throw new UnsupportedEncodingException(String.format("Unable to deserialize response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedEncodings()));
+				throw new UnsupportedEncodingException(String.format("Unable to decode response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedEncodings()));
 			} else {
-				return serializer.deserialize(responseBody, responseClass);
+				return serializer.decode(responseBody, responseClass);
 			}
 		} else {
 			throw new UnsupportedEncodingException("HttpResponse does not have Content-Type header set");

@@ -13,7 +13,7 @@ public class Text implements Serializer {
 	}
 
 	@Override
-	public byte[] serialize(HttpRequest request) throws IOException {
+	public byte[] encode(HttpRequest request) throws IOException {
 		if (request.requestBody() instanceof String) {
 			return ((String) request.requestBody()).getBytes();
 		} else {
@@ -22,7 +22,7 @@ public class Text implements Serializer {
 	}
 
 	@Override
-	public <T> T deserialize(String source, Class<T> cls) throws IOException {
+	public <T> T decode(String source, Class<T> cls) throws IOException {
 		if (!cls.isAssignableFrom(String.class)) {
 			throw new UnsupportedEncodingException("Text class unable to return types other than String");
 		}

@@ -89,38 +89,38 @@ public class JsonTest {
     @Test(expectedExceptions = JsonParseException.class)
     public void testJson_deserialize_errorsForNoOpenKeyQuote() throws IOException {
         String noStartQuote = "{\"my_key: \"value\"}";
-		new Json().deserialize(noStartQuote, Map.class);
+		new Json().decode(noStartQuote, Map.class);
     }
 
 	@Test(expectedExceptions = JsonParseException.class)
 	public void testJson_deserialize_errorsForNoEndKeyQuote() throws IOException {
 		String noStartQuote = "{my_key\": \"value\"}";
-		new Json().deserialize(noStartQuote, Map.class);
+		new Json().decode(noStartQuote, Map.class);
 	}
 
     @Test(expectedExceptions = JsonParseException.class)
     public void testJson_deserialize_throwsForJSONWithoutStartingBracket() throws IOException {
         String noStartBracket = "\"my_key\":\"my_value\"}";
-		new Json().deserialize(noStartBracket, Map.class);
+		new Json().decode(noStartBracket, Map.class);
     }
 
 	@Test(expectedExceptions = JsonParseException.class)
 	public void testJson_deserialize_throwsForJSONWithoutEndingBracket() throws IOException {
 		String noStartBracket = "{\"my_key\":\"my_value\"";
-		new Json().deserialize(noStartBracket, Map.class);
+		new Json().decode(noStartBracket, Map.class);
 	}
 
     @Test(expectedExceptions = JsonParseException.class)
     public void testJson_deserialize_throwsForJSONWithoutColon() throws IOException {
         String noColon = "{\"my_key\"\"my_value\"}";
-        new Json().deserialize(noColon, Map.class);
+        new Json().decode(noColon, Map.class);
     }
 
     @Test()
     public void testJson_deserialize_parsesScientificNotationCorrectly() throws IOException {
 		String json = "{\"key\": 1.233e10}";
 
-		Map<String, Double> deserialized = new Json().deserialize(json, Map.class);
+		Map<String, Double> deserialized = new Json().decode(json, Map.class);
 
 		assertEquals(deserialized.get("key"), 1.233e10);
     }
@@ -128,7 +128,7 @@ public class JsonTest {
     @Test()
     public void testJson_deserialize_parsesNull() throws IOException {
 		String json = "{\"key\": null}";
-		Map<String, Object> deserialized = new Json().deserialize(json, Map.class);
+		Map<String, Object> deserialized = new Json().decode(json, Map.class);
 
 		assertNull(deserialized.get("key"));
     }
@@ -139,7 +139,7 @@ public class JsonTest {
     	Json j = new Json();
 
 		try {
-			Map<String, Object> a = j.deserialize(json, Map.class);
+			Map<String, Object> a = j.decode(json, Map.class);
 			fail("Expected IOException");
 		} catch (IOException ite) {
 			assertTrue(ite instanceof JsonParseException);
@@ -152,7 +152,7 @@ public class JsonTest {
 		String json = "{\"locales\":[\"ocean\" \"lake\"]}";
 
 		try {
-			Zoo.Animal a = j.deserialize(json, Zoo.Animal.class);
+			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
 			fail("Expected IOException");
 		} catch (IOException ite) {
 			assertTrue(ite instanceof JsonParseException);
@@ -165,7 +165,7 @@ public class JsonTest {
     	String json = "{\"locales:[\"ocean\"}";
 
         try {
-			Zoo.Animal a = j.deserialize(json, Zoo.Animal.class);
+			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
             fail("Expected IOException");
         } catch (IOException ite) {
         	assertTrue(ite instanceof JsonParseException);
@@ -196,7 +196,7 @@ public class JsonTest {
 				"\t\"number_of_animals\": 1\n" +
 				"}";
 
-		Zoo zoo  = new Json().deserialize(serializedZoo, Zoo.class);
+		Zoo zoo  = new Json().decode(serializedZoo, Zoo.class);
 
 		assertEquals("Monterey Bay Aquarium", zoo.name);
 		assertEquals(1, zoo.numberOfAnimals.intValue());
@@ -216,7 +216,7 @@ public class JsonTest {
     public void testJson_deserialize_createsAnObjectFromJSON() throws IOException {
        String serializedZoo = "{\"name\":\"Monterey Bay Aquarium\",\"animal\":{\"locales\":[\"ocean\",\"lake\"],\"kind\":\"swimmy\",\"carnivorous\":false,\"weight\":10,\"age\":3,\"appendages\":{\"Dorsal fin\":{\"size\":2,\"location\":\"back\"},\"Ventral fin\":{\"size\":2,\"location\":\"front\"}}},\"number_of_animals\":1}";
 
-       Zoo zoo  = new Json().deserialize(serializedZoo, Zoo.class);
+       Zoo zoo  = new Json().decode(serializedZoo, Zoo.class);
 
        assertEquals("Monterey Bay Aquarium", zoo.name);
        assertEquals(1, zoo.numberOfAnimals.intValue());
@@ -236,7 +236,7 @@ public class JsonTest {
     public void testJson_deserialize_deserializesRawList() throws IOException {
 		String serializedZoo = "[\"name\",\"Monterey Bay Aquarium\"]";
 
-		List<String> strings = new Json().deserialize(serializedZoo, List.class);
+		List<String> strings = new Json().decode(serializedZoo, List.class);
 		assertEquals(strings.size(), 2);
 		assertEquals(strings.get(0), "name");
 		assertEquals(strings.get(1), "Monterey Bay Aquarium");
@@ -245,7 +245,7 @@ public class JsonTest {
 	@Test
 	public void testJson_deserialize_deserializesEmptyObject() throws IOException {
     	String empty = "{}";
-    	Map<String, Object> deserialized = new Json().deserialize(empty, Map.class);
+    	Map<String, Object> deserialized = new Json().decode(empty, Map.class);
 
     	assertEquals(deserialized.size(), 0);
 	}
@@ -253,7 +253,7 @@ public class JsonTest {
 	@Test
 	public void testJson_deserialize_deserializesEmptyList() throws IOException {
 		String empty = "[]";
-		List<Object> deserialized = new Json().deserialize(empty, List.class);
+		List<Object> deserialized = new Json().decode(empty, List.class);
 
 		assertEquals(deserialized.size(), 0);
 	}
@@ -261,7 +261,7 @@ public class JsonTest {
 	@Test
 	public void testJson_deserialize_deserializesWithCommasInValues() throws IOException {
 		String empty = "{\"key\": \"one,two\", \"key_two\": \"four,five\"}";
-		Map<String,Object> deserialized = new Json().deserialize(empty, Map.class);
+		Map<String,Object> deserialized = new Json().decode(empty, Map.class);
 
 		assertEquals(deserialized.size(), 2);
 		assertEquals(deserialized.get("key"), "one,two");
@@ -271,7 +271,7 @@ public class JsonTest {
 	public void testJson_deserialize_deserializeNestedList() throws IOException {
 		String serializedZoo = "[[\"name\",\"Monterey Bay Aquarium\"],[\"Shedd\"]]";
 
-		List<List<String>> strings = new Json().deserialize(serializedZoo, List.class);
+		List<List<String>> strings = new Json().decode(serializedZoo, List.class);
 		assertEquals(strings.size(), 2);
 		assertEquals(strings.get(0).get(0), "name");
 		assertEquals(strings.get(0).get(1), "Monterey Bay Aquarium");
@@ -283,7 +283,7 @@ public class JsonTest {
 	public void testNestedEmptyObj() throws IOException {
 		String empty = "{\"id\":{}}";
 
-		Map<String, Object> obj = new Json().deserialize(empty, Map.class);
+		Map<String, Object> obj = new Json().decode(empty, Map.class);
 		assertNotNull(obj.get("id"));
 	}
 
@@ -291,7 +291,7 @@ public class JsonTest {
 	public void testNestedEmptyList() throws IOException {
 		String empty = "{\"id\":[]}";
 
-		Map<String,Object> obj = new Json().deserialize(empty, Map.class);
+		Map<String,Object> obj = new Json().decode(empty, Map.class);
 		assertNotNull(obj.get("id"));
 		assertTrue(obj.get("id") instanceof List);
 	}
@@ -300,7 +300,7 @@ public class JsonTest {
 	public void testParsesEmptyString() throws IOException {
     	String json = "{\"name\": \"\"}";
 
-    	Map<String, Object> deserialized = new Json().deserialize(json, Map.class);
+    	Map<String, Object> deserialized = new Json().decode(json, Map.class);
 
     	assertEquals(deserialized.get("name"), "");
 	}

@@ -22,7 +22,7 @@ public class Multipart implements Serializer {
 	}
 
 	@Override
-	public byte[] serialize(HttpRequest request) throws IOException {
+	public byte[] encode(HttpRequest request) throws IOException {
 		if (!(request.requestBody() instanceof Map)) {
 			throw new SerializeException("Request requestBody must be Map<String, Object> when Content-Type is multipart/*");
 		} else {
@@ -52,8 +52,8 @@ public class Multipart implements Serializer {
 	}
 
 	@Override
-	public <T> T deserialize(String source, Class<T> cls) throws IOException {
-		throw new UnsupportedEncodingException("Unable to deserialize Content-Type: multipart/form-data.");
+	public <T> T decode(String source, Class<T> cls) throws IOException {
+		throw new UnsupportedEncodingException("Unable to decode Content-Type: multipart/form-data.");
 	}
 
 	private void writePartHeader(OutputStream writer, String name, String filename, String boundary) throws IOException {

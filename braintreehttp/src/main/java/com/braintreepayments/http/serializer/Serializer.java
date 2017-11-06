@@ -6,6 +6,6 @@ import java.io.IOException;
 
 public interface Serializer {
 	String contentType();
-	byte[] serialize(HttpRequest request) throws IOException;
-	<T> T deserialize(String source, Class<T> cls) throws IOException;
+	byte[] encode(HttpRequest request) throws IOException;
+	<T> T decode(String source, Class<T> cls) throws IOException;
 }

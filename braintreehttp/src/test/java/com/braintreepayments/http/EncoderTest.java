@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
 
-import static org.testng.Assert.*;
+import static org.testng.AssertJUnit.*;
 
 public class EncoderTest {
 
@@ -25,60 +25,8 @@ public class EncoderTest {
 			fail("Expected serializeRequest to throw IOException");
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Unable to serialize request with Content-Type: not application/json. Supported encodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
+			assertEquals(ioe.getMessage(), "Unable to encode request with Content-Type: not application/json. Supported encodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
 		}
-	}
-
-	@Test
-	public void testEncoder_encode_json() throws IOException {
-		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
-		request.header("Content-Type", "application/json");
-		request.requestBody(new Zoo());
-
-		Encoder encoder = new Encoder();
-
-		String s = new String(encoder.serializeRequest(request));
-		assertNotEquals(s, "");
-	}
-
-	@Test
-	public void testEncoder_encode_text() throws IOException {
-		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
-		request.header("Content-Type", "text/html");
-		request.requestBody("some text");
-
-		Encoder encoder = new Encoder();
-
-		String s = new String(encoder.serializeRequest(request));
-		assertEquals(s, "some text");
-	}
-
-	@Test
-	public void testEncoder_encode_list() throws IOException {
-		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
-		request.header("Content-Type", "application/json");
-		ArrayList<Zoo> body = new ArrayList();
-		body.add(new Zoo("name", 1, null));
-		request.requestBody(body);
-
-		Encoder encoder = new Encoder();
-
-		String s = new String(encoder.serializeRequest(request));
-		assertNotEquals(s, "");
-	}
-
-	@Test
-	public void testEncoder_encode_map() throws IOException {
-		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
-		request.header("Content-Type", "application/json");
-		Map<String, Object> body = new HashMap<>();
-		body.put("one", "two");
-		request.requestBody(body);
-
-		Encoder encoder = new Encoder();
-
-		String s = new String(encoder.serializeRequest(request));
-		assertEquals(s, "{\"one\":\"two\"}");
 	}
 
 	@Test
@@ -109,8 +57,20 @@ public class EncoderTest {
 			Zoo z = encoder.deserializeResponse(response, Zoo.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Unable to deserialize response with Content-Type: not application/json. Supported decodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
+			assertEquals(ioe.getMessage(), "Unable to decode response with Content-Type: not application/json. Supported decodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
 		}
+	}
+
+	@Test
+	public void testEncoder_encode_json() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "application/json");
+		request.requestBody(new Zoo());
+
+		Encoder encoder = new Encoder();
+
+		String s = new String(encoder.serializeRequest(request));
+		assertNotSame(s, "");
 	}
 
 	@Test
@@ -140,15 +100,71 @@ public class EncoderTest {
 	}
 
 	@Test
+	public void testEncoder_encode_list() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "application/json");
+		ArrayList<Zoo> body = new ArrayList();
+		body.add(new Zoo("name", 1, null));
+		request.requestBody(body);
+
+		Encoder encoder = new Encoder();
+
+		String s = new String(encoder.serializeRequest(request));
+		assertNotSame("", s);
+	}
+
+	@Test
+	public void testEncoder_encode_map() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "application/json");
+		Map<String, Object> body = new HashMap<>();
+		body.put("one", "two");
+		request.requestBody(body);
+
+		Encoder encoder = new Encoder();
+
+		String s = new String(encoder.serializeRequest(request));
+		assertEquals(s, "{\"one\":\"two\"}");
+	}
+
+	@Test
+	public void testEncoder_encode_text() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "text/html; charset=utf8");
+		request.requestBody("some text");
+
+		Encoder encoder = new Encoder();
+
+		String s = new String(encoder.serializeRequest(request));
+		assertEquals(s, "some text");
+	}
+
+	@Test
 	public void testEncoder_decode_text() throws IOException {
 		String response = "<h1>Hello!</h1>";
 		Headers headers = new Headers();
-		headers.header("Content-Type", "text/html");
+		headers.header("Content-Type", "text/html; charset=utf8");
 
 		Encoder encoder = new Encoder();
 
 		String s = encoder.deserializeResponse(response, String.class, headers);
 
 		assertEquals(s, response);
+	}
+
+	@Test
+	public void testEncoder_encode_multipart() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "multipart/form-data; charset=utf8");
+
+		Map<String, Object> body = new HashMap<>();
+		body.put("Key", "Value");
+
+		request.requestBody(body);
+
+		Encoder encoder = new Encoder();
+		String s = new String(encoder.serializeRequest(request));
+
+		assertNotSame(s, "");
 	}
 }

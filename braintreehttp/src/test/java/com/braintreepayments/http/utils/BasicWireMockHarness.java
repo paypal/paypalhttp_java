@@ -38,7 +38,7 @@ public class BasicWireMockHarness extends WireMockHarness {
 				body = (String) request.requestBody();
 			} else {
 				try {
-					body = new String(new Json().serialize(request));
+					body = new String(new Json().encode(request));
 				} catch (IOException ignored) {}
 			}
 		}

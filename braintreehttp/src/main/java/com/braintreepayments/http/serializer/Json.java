@@ -26,7 +26,7 @@ public class Json implements Serializer {
 
 	@Override
 	@SuppressWarnings("unchecked")
-	public <T> T deserialize(String source, Class<T> cls) throws IOException {
+	public <T> T decode(String source, Class<T> cls) throws IOException {
 		if (cls.isAssignableFrom(Map.class) || cls.isAssignableFrom(List.class)) {
 			return (T) deserializeInternal(source);
 		} else {
@@ -42,7 +42,7 @@ public class Json implements Serializer {
 	}
 
 	@Override
-	public byte[] serialize(HttpRequest request) throws SerializeException {
+	public byte[] encode(HttpRequest request) throws SerializeException {
 		return serialize(request.requestBody()).getBytes();
 	}
 
