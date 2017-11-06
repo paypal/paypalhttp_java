@@ -1,9 +1,6 @@
 package com.braintreepayments.http;
 
-import com.braintreepayments.http.serializer.Json;
-import com.braintreepayments.http.serializer.Multipart;
-import com.braintreepayments.http.serializer.Serializer;
-import com.braintreepayments.http.serializer.Text;
+import com.braintreepayments.http.serializer.*;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
@@ -22,6 +19,7 @@ public class Encoder {
 		registerSerializer(new Json());
 		registerSerializer(new Text());
 		registerSerializer(new Multipart());
+		registerSerializer(new FormEncoded());
 	}
 
 	public byte[] serializeRequest(HttpRequest request) throws IOException {

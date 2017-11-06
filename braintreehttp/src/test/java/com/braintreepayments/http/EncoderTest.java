@@ -167,4 +167,21 @@ public class EncoderTest {
 
 		assertNotSame(s, "");
 	}
+
+	@Test
+	public void testEncoder_encode_formEncoded() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "application/x-www-form-urlencoded; charset=utf8");
+
+		Map<String, Object> body = new HashMap<>();
+		body.put("Key", "Value");
+		body.put("Key-2", "Value-2");
+
+		request.requestBody(body);
+
+		Encoder encoder = new Encoder();
+		String s = new String(encoder.serializeRequest(request));
+
+		assertNotSame("", s);
+	}
 }
