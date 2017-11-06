@@ -127,7 +127,7 @@ public class HttpClient {
 		setRequestVerb(request.verb(), connection);
 		if (request.requestBody() != null) {
 			connection.setDoOutput(true);
-			byte[] data = encoder.serializeRequest(request);
+			byte[] data = encoder.encode(request);
 
 			applyHeadersFromRequest(connection, request);
 			writeOutputStream(connection.getOutputStream(), data);
@@ -194,7 +194,7 @@ public class HttpClient {
 				if (responseClass.isAssignableFrom(responseBody.getClass())) {
 					deserializedResponse = (T) responseBody;
 				} else {
-					deserializedResponse = encoder.deserializeResponse(responseBody, responseClass, responseHeaders);
+					deserializedResponse = encoder.decode(responseBody, responseClass, responseHeaders);
 				}
 			}
 
