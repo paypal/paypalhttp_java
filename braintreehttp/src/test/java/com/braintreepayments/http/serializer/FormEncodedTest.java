@@ -24,7 +24,7 @@ public class FormEncodedTest {
 			formEncoded.encode(request);
 			fail("Http client should have thrown for non-Map requestBody");
 		} catch (IOException ioe) {
-			assertEquals("Request requestBody must be Map<String, Object> when Content-Type is multipart/*", ioe.getMessage());
+			assertEquals("Request requestBody must be Map<String, String> when Content-Type is application/x-www-form-urlencoded", ioe.getMessage());
 		}
 	}
 
@@ -60,6 +60,13 @@ public class FormEncodedTest {
 
 		String encoded = new String(formEncoded.encode(request));
 
-		assertEquals("key=value+with+dashes+and+spaces", encoded);
+		assertEquals("key=value%20with%20dashes%20and%20spaces", encoded);
+	}
+
+	@Test
+	public void testFormEncoded_urlEscape() {
+		String input = "some data !\"#$%&'()*+,-./";
+
+		assertEquals("some%20data%20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2D%2E%2F", FormEncoded.urlEscape(input));
 	}
 }
