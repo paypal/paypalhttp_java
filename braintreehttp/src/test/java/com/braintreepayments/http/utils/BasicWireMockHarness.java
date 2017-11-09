@@ -10,7 +10,7 @@ import com.braintreepayments.http.testutils.WireMockHarness;
 import org.testng.annotations.BeforeMethod;
 
 import java.io.IOException;
-import java.lang.reflect.Field;
+import java.util.HashMap;
 import java.util.Map;
 
 public class BasicWireMockHarness extends WireMockHarness {
@@ -66,13 +66,12 @@ public class BasicWireMockHarness extends WireMockHarness {
 
 	@SuppressWarnings("unchecked")
 	private Map<String, String> translateHeaders(Headers headers) {
-		try {
-			Field mHeaders = Headers.class.getDeclaredField("mHeaders");
-			mHeaders.setAccessible(true);
+		Map<String, String> headerMap = new HashMap<>();
 
-			return (Map<String, String>) mHeaders.get(headers);
-		} catch (NoSuchFieldException | IllegalAccessException ignored) {}
+		for (String key : headers) {
+			headerMap.put(key, headers.header(key));
+		}
 
-		return null;
+		return headerMap;
 	}
 }

@@ -187,20 +187,16 @@ public class HttpClient {
 		int statusCode;
 		statusCode = connection.getResponseCode();
 		if (statusCode >= HTTP_OK && statusCode <= HTTP_PARTIAL) {
-			responseBody = readStream(connection.getInputStream(), connection.getContentEncoding());
-
 			T deserializedResponse = null;
-			if (responseBody.length() > 0 && !Void.class.isAssignableFrom(responseClass)) {
-				if (responseClass.isAssignableFrom(responseBody.getClass())) {
-					deserializedResponse = (T) responseBody;
-				} else {
-					deserializedResponse = encoder.deserializeResponse(responseBody, responseClass, responseHeaders);
-				}
+
+			if (!Void.class.isAssignableFrom(responseClass)) {
+				deserializedResponse = encoder.deserializeResponse(connection.getInputStream(), responseClass, responseHeaders);
 			}
 
 			return new HttpResponse<>(responseHeaders, statusCode, deserializedResponse);
 		} else {
-			responseBody = readStream(connection.getErrorStream(), connection.getContentEncoding());
+			responseBody = readStream(connection.getErrorStream());
+
 			throw new HttpException(responseBody, statusCode, responseHeaders);
 		}
 	}

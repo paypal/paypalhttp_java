@@ -2,10 +2,14 @@ package com.braintreepayments.http;
 
 import com.braintreepayments.http.serializer.*;
 
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 
 public class Encoder {
 
@@ -24,34 +28,77 @@ public class Encoder {
 
 	public byte[] serializeRequest(HttpRequest request) throws IOException {
 		String contentType = request.headers().header(Headers.CONTENT_TYPE);
+
 		if (contentType != null) {
 			Serializer serializer = serializer(contentType);
+
 			if (serializer == null) {
 				throw new UnsupportedEncodingException(String.format("Unable to encode request with Content-Type: %s. Supported encodings are: %s", request.headers().header(Headers.CONTENT_TYPE), supportedEncodings()));
-			} else {
-				return serializer.encode(request);
 			}
+
+			byte[] encoded = serializer.encode(request);
+
+			if ("gzip".equals(request.headers().header("Content-Encoding"))) {
+				ByteArrayOutputStream bos = new ByteArrayOutputStream();
+				GZIPOutputStream gzos = new GZIPOutputStream(bos);
+
+				try {
+					gzos.write(encoded);
+				} finally {
+					bos.close();
+					gzos.close();
+				}
+
+				return bos.toByteArray();
+			}
+
+			return encoded;
 		} else {
 			throw new UnsupportedEncodingException("HttpRequest does not have Content-Type header set");
 		}
 	}
 
-	public <T> T deserializeResponse(String responseBody, Class<T> responseClass, Headers headers) throws IOException {
+	public <T> T deserializeResponse(InputStream stream, Class<T> responseClass, Headers headers) throws IOException {
 		String contentType = headers.header(Headers.CONTENT_TYPE);
-		if (contentType != null) {
-			Serializer serializer = serializer(contentType);
-			if (serializer == null) {
-				throw new UnsupportedEncodingException(String.format("Unable to decode response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedEncodings()));
-			} else {
-				return serializer.decode(responseBody, responseClass);
+
+		String responseBody;
+		if ("gzip".equals(headers.header("Content-Encoding"))) {
+			GZIPInputStream gzis = new GZIPInputStream(stream);
+
+			try {
+				responseBody = StreamUtils.readStream(gzis);
+			} finally {
+				gzis.close();
 			}
 		} else {
+			responseBody = StreamUtils.readStream(stream);
+		}
+		stream.close();
+
+		if (responseBody.isEmpty()) {
+			return null;
+		}
+
+		if (contentType == null) {
 			throw new UnsupportedEncodingException("HttpResponse does not have Content-Type header set");
 		}
+
+		Serializer serializer = serializer(contentType);
+
+		if (serializer == null) {
+			throw new UnsupportedEncodingException(String.format("Unable to decode response with Content-Type: %s. Supported decodings are: %s", headers.header(Headers.CONTENT_TYPE), supportedEncodings()));
+		}
+
+		if (responseBody.length() > 0) {
+			return serializer.decode(responseBody, responseClass);
+		}
+
+		return null;
 	}
 
 	private List<String> supportedEncodings() {
 		List<String> supportedEncodings = new ArrayList<>();
+
 		for (Serializer serializer : serializers) {
 			supportedEncodings.add(serializer.contentType());
 		}

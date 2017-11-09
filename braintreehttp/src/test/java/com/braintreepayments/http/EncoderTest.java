@@ -2,11 +2,14 @@ package com.braintreepayments.http;
 
 import org.testng.annotations.Test;
 
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPOutputStream;
 
 import static org.testng.AssertJUnit.*;
 
@@ -25,7 +28,7 @@ public class EncoderTest {
 			fail("Expected serializeRequest to throw IOException");
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Unable to encode request with Content-Type: not application/json. Supported encodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
+			assertTrue(ioe.getMessage().contains("Unable to encode request with Content-Type: not application/json. Supported encodings are: "));
 		}
 	}
 
@@ -38,7 +41,7 @@ public class EncoderTest {
 		Encoder encoder = new Encoder();
 
 		try {
-			Object o = encoder.deserializeResponse(response, Object.class, headers);
+			Object o = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), Object.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
 			assertEquals(ioe.getMessage(), "Destination class Object must implement Deserializable, Map, List, or String");
@@ -54,10 +57,10 @@ public class EncoderTest {
 		Encoder encoder = new Encoder();
 
 		try {
-			Zoo z = encoder.deserializeResponse(response, Zoo.class, headers);
+			Zoo z = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), Zoo.class, headers);
 		} catch (IOException ioe) {
 			assertTrue(ioe instanceof UnsupportedEncodingException);
-			assertEquals(ioe.getMessage(), "Unable to decode response with Content-Type: not application/json. Supported decodings are: [^application\\/json, ^text\\/.*, ^multipart\\/.*]");
+			assertTrue(ioe.getMessage().contains("Unable to decode response with Content-Type: not application/json. Supported decodings are: "));
 		}
 	}
 
@@ -81,7 +84,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		Zoo s = encoder.deserializeResponse(response, Zoo.class, headers);
+		Zoo s = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), Zoo.class, headers);
 
 		assertEquals(s.name, "Brian Tree");
 	}
@@ -94,9 +97,50 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		Zoo s = encoder.deserializeResponse(response, Zoo.class, headers);
+		Zoo s = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), Zoo.class, headers);
 
 		assertEquals(s.name, "Brian Tree");
+	}
+
+	@Test
+	public void testEncoder_encode_withGzip() throws IOException {
+		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
+		request.header("Content-Type", "text/plain");
+		request.header("Content-Encoding", "gzip");
+		request.requestBody("Some plain text");
+
+		Encoder encoder = new Encoder();
+
+		byte[] encoded = encoder.serializeRequest(request);
+
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		GZIPOutputStream gzos = new GZIPOutputStream(bos);
+
+		gzos.write("Some plain text".getBytes());
+		gzos.close();
+		bos.close();
+
+		assertArrayEquals(bos.toByteArray(), encoded);
+	}
+
+	@Test
+	public void testEncoder_decode_withGzip() throws IOException {
+		String rawData = "some plain text";
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		GZIPOutputStream gzos = new GZIPOutputStream(bos);
+
+		gzos.write(rawData.getBytes());
+		gzos.close();
+		bos.close();
+
+		Headers headers = new Headers();
+
+		headers.header("Content-Type", "text/plain");
+		headers.header("Content-Encoding", "gzip");
+
+		String decoded = new Encoder().deserializeResponse(new ByteArrayInputStream(bos.toByteArray()), String.class, headers);
+
+		assertEquals(rawData, decoded);
 	}
 
 	@Test
@@ -147,7 +191,7 @@ public class EncoderTest {
 
 		Encoder encoder = new Encoder();
 
-		String s = encoder.deserializeResponse(response, String.class, headers);
+		String s = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), String.class, headers);
 
 		assertEquals(s, response);
 	}

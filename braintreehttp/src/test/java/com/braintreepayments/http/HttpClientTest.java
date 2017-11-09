@@ -343,7 +343,9 @@ public class HttpClientTest extends BasicWireMockHarness {
 	@Test
 	public void testHttpClient_doesNotManuallyDeserializeIfResponseTypeIsString() throws IOException {
 		HttpRequest<String> request = simpleRequest();
-		HttpResponse<String> response = new HttpResponse<>(null, 200, "Here's the response");
+		HttpResponse<String> response = new HttpResponse<>(new Headers(), 200, "Here's the response");
+
+		response.headers().header("Content-Type", "text/plain");
 
 		stub(request, response);
 
