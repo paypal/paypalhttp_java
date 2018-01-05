@@ -1,0 +1,11 @@
+language: java
+jdk:
+- oraclejdk8
+- oraclejdk9
+script:
+- ./gradlew clean test
+notifications:
+ email:
+   recipients:
+   - external-ci-notifications+braintreehttp@getbraintree.com
+on_success: change
