@@ -1,3 +1,8 @@
+## 1.2.15
+* Add support for FormEncoded params.
+* Add gzip encoding/decoding support.
+* Ensure all responses are unzipped correctly.
+
 ## 1.2.14
 * Fix duplicated connection in HttpClient#execute.
 
