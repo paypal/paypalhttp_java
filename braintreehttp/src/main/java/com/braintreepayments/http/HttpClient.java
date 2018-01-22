@@ -16,7 +16,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import static com.braintreepayments.http.serializer.StreamUtils.readStream;
 import static com.braintreepayments.http.serializer.StreamUtils.writeOutputStream;
 import static java.net.HttpURLConnection.HTTP_OK;
 import static java.net.HttpURLConnection.HTTP_PARTIAL;
@@ -195,8 +194,7 @@ public class HttpClient {
 
 			return new HttpResponse<>(responseHeaders, statusCode, deserializedResponse);
 		} else {
-			responseBody = readStream(connection.getErrorStream());
-
+			responseBody = encoder.deserializeResponse(connection.getErrorStream(), String.class, responseHeaders);
 			throw new HttpException(responseBody, statusCode, responseHeaders);
 		}
 	}

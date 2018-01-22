@@ -4,14 +4,19 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.zip.GZIPInputStream;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
 
 public class StreamUtils {
 
-	public static String readStream(InputStream in) throws IOException {
+	public static String readStream(InputStream in, String contentEncoding) throws IOException {
 		if (in == null) {
 			return null;
+		}
+
+		if ("gzip".equals(contentEncoding)) {
+			in = new GZIPInputStream(in);
 		}
 
 		try {
