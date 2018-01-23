@@ -1,3 +1,6 @@
+## 1.2.17
+* Ensure error responses aren't umarshaled.
+
 ## 1.2.16
 * Fix urlencoding form params.
 
