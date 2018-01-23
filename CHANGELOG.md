@@ -1,3 +1,6 @@
+## 1.2.16
+* Fix urlencoding form params.
+
 ## 1.2.15
 * Add support for FormEncoded params.
 * Add gzip encoding/decoding support.
