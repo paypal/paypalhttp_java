@@ -5,11 +5,12 @@ import com.braintreepayments.http.exceptions.SerializeException;
 
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.*;
+import java.net.URLEncoder;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
 
 public class FormEncoded implements Serializer {
-
-	private static String safeRegex = "[A-Za-z]";
 
 	@Override
 	public String contentType() {
@@ -39,27 +40,10 @@ public class FormEncoded implements Serializer {
 	}
 
 	public static String urlEscape(String input) {
-		StringBuilder res = new StringBuilder();
-		char[] charArray = input.toCharArray();
+		try {
+			return URLEncoder.encode(input, "UTF8");
+		} catch (UnsupportedEncodingException ignored) {}
 
-		String currentChar = "";
-		for (int i = 0; i < charArray.length; i ++) {
-			char c = charArray[i];
-			currentChar = (currentChar + c).substring(i > 0 ? 1 : 0);
-
-			if (!currentChar.matches(safeRegex)) {
-				res.append('%');
-				res.append(toHex(c / 16));
-				res.append(toHex(c % 16));
-			} else {
-				res.append(c);
-			}
-		}
-
-		return res.toString();
-	}
-
-	private static char toHex(int ch) {
-		return (char) (ch < 10 ? '0' + ch : 'A' + ch - 10);
+		return null;
 	}
 }
