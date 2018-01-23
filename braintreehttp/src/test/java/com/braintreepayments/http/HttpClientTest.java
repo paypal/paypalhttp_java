@@ -84,6 +84,32 @@ public class HttpClientTest extends BasicWireMockHarness {
 		}
 	}
 
+	@Test
+	public void testHttpClient_execute_unzips_unsuccessfulResponseAnyContentType() throws IOException {
+		HttpRequest<String> request = simpleRequest();
+
+		String body = "{\"key\": \"some data to be gzipped\"}";
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		GZIPOutputStream gzos = new GZIPOutputStream(bos);
+		gzos.write(body.getBytes());
+		gzos.close();
+		bos.close();
+
+		stubFor(WireMock.get(urlPathEqualTo("/"))
+				.willReturn(new ResponseDefinitionBuilder()
+						.withStatus(400)
+						.withHeader("Content-Type", "application/json")
+						.withHeader("Content-Encoding", "gzip")
+						.withBody(bos.toByteArray())));
+
+		try {
+			client.execute(request);
+			fail("We should always be throwing an exception");
+		} catch (HttpException ex) {
+			assertEquals(body, ex.getMessage());
+		}
+	}
+
 	@Test(dataProvider = "getSuccessCode")
 	public void testHttpClient_execute_returnsSuccess(final int statusCode) throws IOException {
 		HttpRequest<String> request = simpleRequest();

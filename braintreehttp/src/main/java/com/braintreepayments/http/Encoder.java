@@ -57,6 +57,7 @@ public class Encoder {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T deserializeResponse(InputStream stream, Class<T> responseClass, Headers headers) throws IOException {
 		String contentType = headers.header(Headers.CONTENT_TYPE);
 		String contentEncoding = headers.header("Content-Encoding");
@@ -64,6 +65,10 @@ public class Encoder {
 		String responseBody = StreamUtils.readStream(stream, contentEncoding);
 
 		stream.close();
+
+		if (responseClass.isAssignableFrom(String.class)) {
+			return (T) responseBody;
+		}
 
 		if (responseBody.isEmpty()) {
 			return null;
