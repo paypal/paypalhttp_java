@@ -1,6 +1,7 @@
 package com.braintreepayments.http.serializer;
 
 import com.braintreepayments.http.HttpRequest;
+import com.braintreepayments.http.annotations.ListOf;
 import com.braintreepayments.http.exceptions.JsonParseException;
 import com.braintreepayments.http.exceptions.SerializeException;
 
@@ -24,20 +25,55 @@ public class Json implements Serializer {
 		return "^application\\/json";
 	}
 
+	private boolean hasAncestor(Class descendant, Class ancestor) {
+		if (descendant == null) {
+			return false;
+		} else if (ancestor.isInterface()) {
+			List<Class> interfaces = Arrays.asList(descendant.getInterfaces());
+			if (interfaces.contains(ancestor)) {
+				return true;
+			}
+		}
+
+		if (!descendant.equals(Object.class) && descendant.isAssignableFrom(ancestor)) {
+			return true;
+		}
+
+		return hasAncestor(descendant.getSuperclass(), ancestor);
+	}
+
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T decode(String source, Class<T> cls) throws IOException {
-		if (cls.isAssignableFrom(Map.class) || cls.isAssignableFrom(List.class)) {
+		if (hasAncestor(cls, List.class) && cls.getAnnotation(ListOf.class) != null) {
+			ListOf listOf = cls.getAnnotation(ListOf.class);
+
+			List<Map<String, Object>> deserialized = (List<Map<String, Object>>) deserializeInternal(source);
+			try {
+				T outlist = cls.newInstance();
+				for (Map<String, Object> map : deserialized) {
+					((List) outlist).add(unmap(map, listOf.listClass()));
+				}
+
+				return outlist;
+			} catch (InstantiationException | IllegalAccessException e) {
+				throw new UnsupportedEncodingException("Could not instantiate type " + cls.getSimpleName());
+			}
+		} else if (hasAncestor(cls, List.class) || hasAncestor(cls, Map.class)) {
 			return (T) deserializeInternal(source);
 		} else {
-			try {
-				Map<String, Object> deserialized = (Map<String, Object>) deserializeInternal(source);
-				return ObjectMapper.unmap(deserialized, cls);
-			} catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
-				throw new UnsupportedEncodingException(e.getMessage());
-			} catch (RuntimeException re) {
-				throw new JsonParseException("Unable to parse Json " + re.getMessage());
-			}
+			Map<String, Object> deserialized = (Map<String, Object>) deserializeInternal(source);
+			return unmap(deserialized, cls);
+		}
+	}
+
+	private <T> T unmap(Map<String, Object> map, Class<T> destinationClass) throws IOException {
+		try {
+			return ObjectMapper.unmap(map, destinationClass);
+		} catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
+			throw new UnsupportedEncodingException("Could not instantiate type " + destinationClass.getSimpleName());
+		} catch (RuntimeException re) {
+			throw new JsonParseException("Unable to parse Json " + re.getMessage());
 		}
 	}
 

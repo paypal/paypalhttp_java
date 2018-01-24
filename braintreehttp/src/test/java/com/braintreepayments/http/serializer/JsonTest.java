@@ -1,6 +1,7 @@
 package com.braintreepayments.http.serializer;
 
 import com.braintreepayments.http.Zoo;
+import com.braintreepayments.http.annotations.ListOf;
 import com.braintreepayments.http.annotations.Model;
 import com.braintreepayments.http.annotations.SerializedName;
 import com.braintreepayments.http.exceptions.JsonParseException;
@@ -231,6 +232,56 @@ public class JsonTest {
        assertEquals("lake", zoo.animal.locales.get(1));
        assertEquals(false, zoo.animal.carnivorous.booleanValue());
     }
+
+	@Model
+	@ListOf(listClass = Zoo.class)
+	public static class ZooList extends ArrayList<Zoo> {
+
+		public ZooList() {
+			super();
+		}
+	}
+
+	@Test
+	@SuppressWarnings("unchecked")
+	public void testJson_deserialize_list() throws IOException {
+		String montereyBay = "{\"name\":\"Monterey Bay Aquarium\",\"animal\":{\"locales\":[\"ocean\",\"lake\"],\"kind\":\"swimmy\",\"carnivorous\":false,\"weight\":10,\"age\":3,\"appendages\":{\"Dorsal fin\":{\"size\":2,\"location\":\"back\"},\"Ventral fin\":{\"size\":2,\"location\":\"front\"}}},\"number_of_animals\":1}";
+		String shedd = "{\"name\":\"Shedd\",\"animal\":{\"locales\":[\"ocean\",\"lake\"],\"kind\":\"swimmy\",\"carnivorous\":true,\"weight\":10,\"age\":3,\"appendages\":{\"Dorsal fin\":{\"size\":2,\"location\":\"back\"},\"Ventral fin\":{\"size\":2,\"location\":\"front\"}}},\"number_of_animals\":1}";
+		String serializedZoo = String.format("[%s, %s]", montereyBay, shedd);
+
+		ZooList zoos = new Json().decode(serializedZoo, ZooList.class);
+
+		assertEquals(zoos.size(), 2);
+
+		Zoo monterey = zoos.get(0);
+
+		assertEquals("Monterey Bay Aquarium", monterey.name);
+		assertEquals(1, monterey.numberOfAnimals.intValue());
+		assertEquals("swimmy", monterey.animal.kind);
+		assertEquals(3, monterey.animal.age.intValue());
+		assertEquals(10.0, monterey.animal.weight);
+		assertEquals("back", monterey.animal.appendages.dorsalFin.location);
+		assertEquals(2, monterey.animal.appendages.dorsalFin.size.intValue());
+		assertEquals("front", monterey.animal.appendages.ventralFin.location);
+		assertEquals(2, monterey.animal.appendages.ventralFin.size.intValue());
+		assertEquals("ocean", monterey.animal.locales.get(0));
+		assertEquals("lake", monterey.animal.locales.get(1));
+		assertEquals(false, monterey.animal.carnivorous.booleanValue());
+
+		Zoo sheddAq = zoos.get(1);
+		assertEquals("Shedd", sheddAq.name);
+		assertEquals(1, sheddAq.numberOfAnimals.intValue());
+		assertEquals("swimmy", sheddAq.animal.kind);
+		assertEquals(3, sheddAq.animal.age.intValue());
+		assertEquals(10.0, sheddAq.animal.weight);
+		assertEquals("back", sheddAq.animal.appendages.dorsalFin.location);
+		assertEquals(2, sheddAq.animal.appendages.dorsalFin.size.intValue());
+		assertEquals("front", sheddAq.animal.appendages.ventralFin.location);
+		assertEquals(2, sheddAq.animal.appendages.ventralFin.size.intValue());
+		assertEquals("ocean", sheddAq.animal.locales.get(0));
+		assertEquals("lake", sheddAq.animal.locales.get(1));
+		assertEquals(true, sheddAq.animal.carnivorous.booleanValue());
+	}
 
     @Test
     public void testJson_deserialize_deserializesRawList() throws IOException {
