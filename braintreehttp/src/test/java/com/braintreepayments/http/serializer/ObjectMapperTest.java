@@ -51,6 +51,12 @@ public class ObjectMapperTest {
 
 		@SerializedName("transient_int")
 		private transient Integer transientInt = 10;
+
+		@SerializedName("null_string_data")
+		private String nullStringData;
+
+		@SerializedName("null_integer_data")
+		private Integer nullIntegerData;
 	}
 
 	@Model
@@ -119,6 +125,8 @@ public class ObjectMapperTest {
 			}};
 
 			put("nested_data", nestedData);
+			put("null_int_data", null);
+			put("null_string_data", null);
 		}};
 
 		TestData output = ObjectMapper.unmap(data, TestData.class);
@@ -140,6 +148,7 @@ public class ObjectMapperTest {
 		assertEquals(4, (int) output.nestedTestDatas.get(0).intData);
 
 		assertEquals(10, (int) output.transientInt);
-		assertNull(output.nullBoolData);
+		assertNull(output.nullIntegerData);
+		assertNull(output.nullStringData);
 	}
 }
