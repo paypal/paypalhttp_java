@@ -1,3 +1,6 @@
+## 1.2.18
+* Enable deserialization of raw list responses in JSON.
+
 ## 1.2.17
 * Ensure error responses aren't umarshaled.
 
