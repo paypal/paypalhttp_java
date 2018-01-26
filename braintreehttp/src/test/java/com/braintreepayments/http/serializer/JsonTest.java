@@ -233,6 +233,17 @@ public class JsonTest {
        assertEquals(false, zoo.animal.carnivorous.booleanValue());
     }
 
+	@Test()
+	public void testJson_deserialize_createsAnObjectWithNullValues() throws IOException {
+		String serializedZoo = "{\"name\":null, \"animal\":{\"locales\":[\"ocean\",\"lake\"]}}";
+
+		Zoo zoo  = new Json().decode(serializedZoo, Zoo.class);
+
+		assertEquals(null, zoo.name);
+		assertEquals("ocean", zoo.animal.locales.get(0));
+		assertEquals("lake", zoo.animal.locales.get(1));
+	}
+
 	@Model
 	@ListOf(listClass = Zoo.class)
 	public static class ZooList extends ArrayList<Zoo> {
