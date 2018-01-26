@@ -16,13 +16,15 @@ import java.lang.annotation.Target;
  * Example, given some complex object ComplexObj:
  *
  * <pre>
- * @Model
- * @ListOf(listClass = ComplexObj.class)
- * public class ComplexObjList extends ArrayList<ComplexObj> {
+ * <code>
+ * {@literal @}Model
+ * {@literal @}ListOf(listClass = ComplexObj.class)
+ * public class ComplexObjList extends ArrayListComplexObj {
  *     public ComplexObjList() {
  *         super();
  *     }
  * }
+ * </code>
  * </pre>
  */
 @Retention(RetentionPolicy.RUNTIME)
