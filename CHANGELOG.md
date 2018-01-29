@@ -1,3 +1,6 @@
+## 1.2.19
+* Fix deserialization of null values in json list.
+
 ## 1.2.18
 * Enable deserialization of raw list responses in JSON.
 
