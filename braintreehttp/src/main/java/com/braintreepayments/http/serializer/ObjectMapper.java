@@ -56,7 +56,7 @@ public class ObjectMapper {
 			Object value = inputData.get(key);
 
 			Field f = fieldForSerializedName(key, cls);
-			if (f == null) {
+			if (f == null || value == null) {
 				continue;
 			}
 
