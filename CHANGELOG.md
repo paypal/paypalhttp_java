@@ -1,3 +1,6 @@
+## 1.3.0
+* Add multipart/form-data support with JSON parts.
+
 ## 1.2.14
 * Fix duplicated connection in HttpClient#execute.
 
