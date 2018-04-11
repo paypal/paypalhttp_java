@@ -8,7 +8,6 @@ import java.io.InputStream;
 import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 public class Encoder {
@@ -58,22 +57,18 @@ public class Encoder {
 		}
 	}
 
+	@SuppressWarnings("unchecked")
 	public <T> T deserializeResponse(InputStream stream, Class<T> responseClass, Headers headers) throws IOException {
 		String contentType = headers.header(Headers.CONTENT_TYPE);
+		String contentEncoding = headers.header("Content-Encoding");
 
-		String responseBody;
-		if ("gzip".equals(headers.header("Content-Encoding"))) {
-			GZIPInputStream gzis = new GZIPInputStream(stream);
+		String responseBody = StreamUtils.readStream(stream, contentEncoding);
 
-			try {
-				responseBody = StreamUtils.readStream(gzis);
-			} finally {
-				gzis.close();
-			}
-		} else {
-			responseBody = StreamUtils.readStream(stream);
-		}
 		stream.close();
+
+		if (responseClass.isAssignableFrom(String.class)) {
+			return (T) responseBody;
+		}
 
 		if (responseBody.isEmpty()) {
 			return null;

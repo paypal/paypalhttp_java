@@ -1,6 +1,23 @@
 ## 1.3.0
 * Add multipart/form-data support with JSON parts.
 
+## 1.2.19
+* Fix deserialization of null values in json list.
+
+## 1.2.18
+* Enable deserialization of raw list responses in JSON.
+
+## 1.2.17
+* Ensure error responses aren't umarshaled.
+
+## 1.2.16
+* Fix urlencoding form params.
+
+## 1.2.15
+* Add support for FormEncoded params.
+* Add gzip encoding/decoding support.
+* Ensure all responses are unzipped correctly.
+
 ## 1.2.14
 * Fix duplicated connection in HttpClient#execute.
 

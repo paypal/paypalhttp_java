@@ -34,7 +34,7 @@ public class FormEncodedTest {
 
 		Map<String, String> data = new HashMap<>();
 		data.put("key", "value");
-		data.put("anotherkey", "anothervalue");
+		data.put("anotherkey", "another_value");
 
 		request.requestBody(data);
 
@@ -43,7 +43,7 @@ public class FormEncodedTest {
 		String encoded = new String(formEncoded.encode(request));
 
 		// Order is non-deterministic
-		String regex = "(key=value&anotherkey=anothervalue|anotherkey=anothervalue&key=value)";
+		String regex = "(key=value&anotherkey=another_value|anotherkey=another_value&key=value)";
 		assertTrue(encoded.matches(regex));
 	}
 
@@ -60,13 +60,13 @@ public class FormEncodedTest {
 
 		String encoded = new String(formEncoded.encode(request));
 
-		assertEquals("key=value%20with%20dashes%20and%20spaces", encoded);
+		assertEquals("key=value+with+dashes+and+spaces", encoded);
 	}
 
 	@Test
 	public void testFormEncoded_urlEscape() {
-		String input = "some data !\"#$%&'()*+,-./";
+		String input = "some data !\"#$%&'()+,/";
 
-		assertEquals("some%20data%20%21%22%23%24%25%26%27%28%29%2A%2B%2C%2D%2E%2F", FormEncoded.urlEscape(input));
+		assertEquals("some+data+%21%22%23%24%25%26%27%28%29%2B%2C%2F", FormEncoded.urlEscape(input));
 	}
 }

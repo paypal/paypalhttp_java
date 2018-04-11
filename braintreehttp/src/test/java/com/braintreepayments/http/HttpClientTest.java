@@ -3,6 +3,8 @@ package com.braintreepayments.http;
 import com.braintreepayments.http.exceptions.HttpException;
 import com.braintreepayments.http.internal.TLSSocketFactory;
 import com.braintreepayments.http.utils.BasicWireMockHarness;
+import com.github.tomakehurst.wiremock.client.ResponseDefinitionBuilder;
+import com.github.tomakehurst.wiremock.client.WireMock;
 import com.github.tomakehurst.wiremock.http.RequestMethod;
 import com.github.tomakehurst.wiremock.matching.RequestPatternBuilder;
 import org.testng.annotations.BeforeMethod;
@@ -11,10 +13,12 @@ import org.testng.annotations.Test;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLSocketFactory;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.net.HttpURLConnection;
 import java.util.*;
+import java.util.zip.GZIPOutputStream;
 
 import static com.braintreepayments.http.Headers.CONTENT_TYPE;
 import static com.braintreepayments.http.Headers.USER_AGENT;
@@ -51,6 +55,58 @@ public class HttpClientTest extends BasicWireMockHarness {
 			fail("We should always be throwing an exception");
 		} catch (Exception ex) {
 			assertEquals(expectedExceptionClass.getSimpleName(), ex.getClass().getSimpleName());
+		}
+	}
+
+	@Test
+	public void testHttpClient_execute_ungzips_unsuccessfulResponse() throws IOException {
+		HttpRequest<String> request = simpleRequest();
+
+		String body = "some data to be gzipped";
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		GZIPOutputStream gzos = new GZIPOutputStream(bos);
+		gzos.write(body.getBytes());
+		gzos.close();
+		bos.close();
+
+		stubFor(WireMock.get(urlPathEqualTo("/"))
+				.willReturn(new ResponseDefinitionBuilder()
+						.withStatus(400)
+						.withHeader("Content-Type", "text/plain")
+						.withHeader("Content-Encoding", "gzip")
+						.withBody(bos.toByteArray())));
+
+		try {
+			client.execute(request);
+			fail("We should always be throwing an exception");
+		} catch (HttpException ex) {
+			assertEquals(body, ex.getMessage());
+		}
+	}
+
+	@Test
+	public void testHttpClient_execute_unzips_unsuccessfulResponseAnyContentType() throws IOException {
+		HttpRequest<String> request = simpleRequest();
+
+		String body = "{\"key\": \"some data to be gzipped\"}";
+		ByteArrayOutputStream bos = new ByteArrayOutputStream();
+		GZIPOutputStream gzos = new GZIPOutputStream(bos);
+		gzos.write(body.getBytes());
+		gzos.close();
+		bos.close();
+
+		stubFor(WireMock.get(urlPathEqualTo("/"))
+				.willReturn(new ResponseDefinitionBuilder()
+						.withStatus(400)
+						.withHeader("Content-Type", "application/json")
+						.withHeader("Content-Encoding", "gzip")
+						.withBody(bos.toByteArray())));
+
+		try {
+			client.execute(request);
+			fail("We should always be throwing an exception");
+		} catch (HttpException ex) {
+			assertEquals(body, ex.getMessage());
 		}
 	}
 
