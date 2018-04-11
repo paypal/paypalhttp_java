@@ -1,3 +1,6 @@
+## 1.3.1
+* Fix merge of branches for code.
+
 ## 1.3.0
 * Add multipart/form-data support with JSON parts.
 
