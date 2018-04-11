@@ -1,5 +1,7 @@
 package com.braintreepayments.http;
 
+import com.braintreepayments.http.multipart.FormPart;
+import com.braintreepayments.http.multipart.MultipartBody;
 import org.testng.annotations.Test;
 
 import java.io.ByteArrayInputStream;
@@ -201,8 +203,7 @@ public class EncoderTest {
 		HttpRequest<Void> request = new HttpRequest("/", "POST", Void.class);
 		request.header("Content-Type", "multipart/form-data; charset=utf8");
 
-		Map<String, Object> body = new HashMap<>();
-		body.put("Key", "Value");
+		MultipartBody body = new MultipartBody(new FormPart("Key", "Value"));
 
 		request.requestBody(body);
 
