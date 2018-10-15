@@ -5,6 +5,8 @@ import com.braintreepayments.http.HttpRequest;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Text implements Serializer {
 
 	@Override
@@ -15,9 +17,9 @@ public class Text implements Serializer {
 	@Override
 	public byte[] encode(HttpRequest request) throws IOException {
 		if (request.requestBody() instanceof String) {
-			return ((String) request.requestBody()).getBytes();
+			return ((String) request.requestBody()).getBytes(UTF_8);
 		} else {
-			return request.requestBody().toString().getBytes();
+			return request.requestBody().toString().getBytes(UTF_8);
 		}
 	}
 

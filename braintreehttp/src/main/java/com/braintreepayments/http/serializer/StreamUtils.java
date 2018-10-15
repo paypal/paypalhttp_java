@@ -35,7 +35,7 @@ public class StreamUtils {
 	}
 
 	public static void writeOutputStream(OutputStream outputStream, String data) throws IOException {
-		writeOutputStream(outputStream, data.getBytes());
+		writeOutputStream(outputStream, data.getBytes(UTF_8));
 	}
 
 	public static void writeOutputStream(OutputStream outputStream, byte[] data) throws IOException {

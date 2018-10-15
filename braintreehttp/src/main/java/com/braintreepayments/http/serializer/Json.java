@@ -10,6 +10,8 @@ import java.io.UnsupportedEncodingException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class Json implements Serializer {
 
 	private static final char OBJECT_TOKEN_OPEN = '{';
@@ -79,7 +81,7 @@ public class Json implements Serializer {
 
 	@Override
 	public byte[] encode(HttpRequest request) throws SerializeException {
-		return serialize(request.requestBody()).getBytes();
+		return serialize(request.requestBody()).getBytes(UTF_8);
 	}
 
 	public String serialize(Object o) throws SerializeException {

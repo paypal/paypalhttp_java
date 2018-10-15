@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
+import static java.nio.charset.StandardCharsets.UTF_8;
+
 public class FormEncoded implements Serializer {
 
 	@Override
@@ -31,7 +33,7 @@ public class FormEncoded implements Serializer {
 			parts.add(key + "=" + urlEscape(body.get(key)));
 		}
 
-		return String.join("&", parts).getBytes();
+		return String.join("&", parts).getBytes(UTF_8);
 	}
 
 	@Override
