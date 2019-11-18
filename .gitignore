@@ -4,5 +4,5 @@ build
 .gradle
 .DS_Store
 gradle.properties
-braintreehttp/out/*
-braintreehttp-testutils/out/*
+paypalhttp/out/*
+paypalhttp-testutils/out/*

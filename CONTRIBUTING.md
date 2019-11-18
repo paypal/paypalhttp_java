@@ -1,4 +1,4 @@
-# Contribute to the Braintree Java HttpClient
+# Contribute to the PayPal Java HttpClient
 
 ### *Pull requests are welcome!*
 

@@ -1,6 +1,6 @@
 task :default => :test
 
-configatron.product_name = "BraintreeHttp Java"
+configatron.product_name = "PayPalHttp Java"
 
 # Custom validations
 def package_version
@@ -48,20 +48,20 @@ end
 configatron.build_method = method(:build)
 
 def publish_to_package_manager(version)
-  CommandProcessor.command("./gradlew braintreehttp:uploadArchives", live_output=true)
-  CommandProcessor.command("./gradlew braintreehttp:closeAndReleaseRepository", live_output=true)
+  CommandProcessor.command("./gradlew paypalhttp:uploadArchives", live_output=true)
+  CommandProcessor.command("./gradlew paypalhttp:closeAndReleaseRepository", live_output=true)
 
   puts
   sleep 60
 
-  CommandProcessor.command("./gradlew braintreehttp-testutils:uploadArchives", live_output=true)
-  CommandProcessor.command("./gradlew braintreehttp-testutils:closeAndReleaseRepository", live_output=true)
+  CommandProcessor.command("./gradlew paypalhttp-testutils:uploadArchives", live_output=true)
+  CommandProcessor.command("./gradlew paypalhttp-testutils:closeAndReleaseRepository", live_output=true)
 end
 
 configatron.publish_to_package_manager_method = method(:publish_to_package_manager)
 
 def wait_for_package_manager(version)
-  CommandProcessor.wait_for("wget -U \"non-empty-user-agent\" -qO- http://central.maven.org/maven2/com/braintreepayments/braintreehttp/#{version}/braintreehttp-#{version}.pom | cat")
+  CommandProcessor.wait_for("wget -U \"non-empty-user-agent\" -qO- http://central.maven.org/maven2/com/paypal/paypalhttp/#{version}/paypalhttp-#{version}.pom | cat")
 end
 
 configatron.wait_for_package_manager_method = method(:wait_for_package_manager)

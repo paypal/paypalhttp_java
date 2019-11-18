@@ -3,8 +3,4 @@ jdk:
 - oraclejdk8
 script:
 - ./gradlew clean test
-notifications:
- email:
-   recipients:
-   - external-ci-notifications+braintreehttp@getbraintree.com
 on_success: change
