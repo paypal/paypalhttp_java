@@ -274,7 +274,7 @@ public class Json implements Serializer {
 		} else if (s.equals("true") || s.equals("false")) {
 			return Boolean.parseBoolean(s);
 		} else if (Character.isDigit(s.charAt(0))) {
-			return Integer.parseInt(s);
+			return Long.parseLong(s);
 		} else {
 			throw new JsonParseException("Invalid value " + s);
 		}
