@@ -92,6 +92,19 @@ public class EncoderTest {
 	}
 
 	@Test
+	public void testEncoder_decode_json_case_insensitive() throws IOException {
+		String response = "{\"name\":\"Brian Tree\"}";
+		Headers headers = new Headers();
+		headers.header("Content-Type", "application/JSON");
+
+		Encoder encoder = new Encoder();
+
+		Zoo s = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), Zoo.class, headers);
+
+		assertEquals(s.name, "Brian Tree");
+	}
+
+	@Test
 	public void testEncoder_decode_json_withCharset() throws IOException {
 		String response = "{\"name\":\"Brian Tree\"}";
 		Headers headers = new Headers();
