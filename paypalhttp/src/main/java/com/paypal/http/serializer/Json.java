@@ -21,6 +21,8 @@ public class Json implements Serializer {
 	private static final char KEY_DELIMITER = ':';
 	private static final char PAIR_DELIMITER = ',';
 	private static final char KEY_BARRIER = '"';
+	private static final char KEY_ESCAPER = 92; // '\' the backslash value
+
 
 	@Override
 	public String contentType() {
@@ -398,18 +400,29 @@ public class Json implements Serializer {
 
 	private SearchResult extractNextStringToken(char[] s, int i) {
 		int startIndex = i;
-
-		if (s[i+1] == KEY_BARRIER) {
+		//also need to check whether this key barrier is escaped or not
+		if (s[i+1] == KEY_BARRIER && !isEscaped(s, i+1)) {
 			i += 2;
 		} else {
 			do {
 				i++;
-			} while(s[i] != KEY_BARRIER);
+			} while(s[i] != KEY_BARRIER || isEscaped(s,i));
 			i++;
 		}
 
 		String val = new String(s, startIndex, i - startIndex);
 		return new SearchResult(i, val);
+	}
+
+	//return true if the character is escaped.
+	private boolean isEscaped(char[] s, int i){
+		//  from the API \" will be send as \\\"
+		if(i - 1 >= 0){
+			return (s[i -1] == KEY_ESCAPER);
+		} else{
+			return false;
+		}
+
 	}
 
 	private SearchResult extractNextValueToken(char[] s, int i) {
