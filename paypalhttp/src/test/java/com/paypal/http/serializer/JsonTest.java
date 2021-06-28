@@ -244,6 +244,36 @@ public class JsonTest {
 		assertEquals("lake", zoo.animal.locales.get(1));
 	}
 
+    @Test()
+    public void testJson_createsAnObjectWithEscapeCharacter() throws IOException {
+		ArrayList<String> fishLocales = new ArrayList<>();
+		fishLocales.add("ocean");
+		fishLocales.add("lake");
+
+		Zoo.Animal fish = new Zoo.Animal(
+				null,
+				0,
+				0,
+				null,
+				fishLocales,
+				false
+		);
+
+		// create a object with input value of double quote and three back slash
+		Zoo zoo = new Zoo(
+				"test \\\", ",
+				1,
+				fish
+		);
+
+		String serializedZoo = new Json().serialize(zoo);
+        zoo  = new Json().decode(serializedZoo, Zoo.class);
+
+        assertEquals(zoo.name, "test \\\", ");
+        assertEquals( zoo.animal.locales.get(0),"ocean");
+        assertEquals(zoo.animal.locales.get(1),"lake");
+    }
+
 	@Model
 	@ListOf(listClass = Zoo.class)
 	public static class ZooList extends ArrayList<Zoo> {
