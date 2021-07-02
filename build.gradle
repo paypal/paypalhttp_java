@@ -19,7 +19,7 @@ def getRepositoryPassword() {
 allprojects {
     apply plugin: 'java'
     group 'com.paypal'
-    version '1.0.1'
+    version '1.0.2'
     sourceCompatibility = 1.8
     targetCompatibility = 1.8
 
@@ -47,10 +47,10 @@ allprojects {
                 beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
                 repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
                 snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-                    authentication(userName: getRepositoryUsername(), password: getRepositoryPassword())
+                    authentication(userName: ossrhUsername, password: ossrhPassword)
                 }
 
                 pom.project {
