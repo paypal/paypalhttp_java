@@ -108,6 +108,7 @@ public class Encoder {
 	}
 
 	private Serializer serializer(String contentType) {
+		contentType = contentType.toLowerCase();
 		if (contentType.contains(";")) {
 			contentType = contentType.split(";")[0];
 		}
