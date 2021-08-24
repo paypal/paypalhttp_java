@@ -21,6 +21,8 @@ public class Headers implements Iterable<String> {
 
 
 	public Headers header(String header, String value) {
+		if(value!=null && header!=null)
+			value = header.equalsIgnoreCase("content-type") ? value.toLowerCase() : value;
 		mHeaders.put(header, value);
 		keyMapping.put(header!=null? header.toLowerCase(): null,header);
 		return this;

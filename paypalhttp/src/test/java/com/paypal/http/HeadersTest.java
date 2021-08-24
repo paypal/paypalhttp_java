@@ -17,6 +17,20 @@ public class HeadersTest {
 	}
 
 	@Test
+	public void testHeaders_setHeader_setsContentTypeCorrectly_case_insensitive_value() {
+		Headers h = new Headers();
+		h.header("content-type", "VAL");
+		assertEquals(h.header("content-type"), "val");
+	}
+
+	@Test
+	public void testHeaders_setHeader_setsContentTypeCorrectly_case_insensitive_key() {
+		Headers h = new Headers();
+		h.header("Content-Type", "VAL");
+		assertEquals(h.header("Content-Type"), "val");
+	}
+
+	@Test
 	public void testHeaders_removeHeader_removesHeaderCorrectly() {
 		Headers h = new Headers();
 		h.header("key", "val");
