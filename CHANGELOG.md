@@ -1,3 +1,6 @@
+## 1.3.2
+* Fix Case Sensitivity of Content Type for deserialization process
+
 ## 1.3.1
 * Fix merge of branches for code.
 
