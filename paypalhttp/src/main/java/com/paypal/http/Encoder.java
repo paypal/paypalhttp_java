@@ -61,6 +61,7 @@ public class Encoder {
 	@SuppressWarnings("unchecked")
 	public <T> T deserializeResponse(InputStream stream, Class<T> responseClass, Headers headers) throws IOException {
 		String contentType = headers.header(Headers.CONTENT_TYPE);
+		contentType = contentType.toLowerCase();
 		String contentEncoding = headers.header("content-encoding");
 
 		String responseBody = StreamUtils.readStream(stream, contentEncoding);
@@ -108,7 +109,6 @@ public class Encoder {
 	}
 
 	private Serializer serializer(String contentType) {
-		contentType = contentType.toLowerCase();
 		if (contentType.contains(";")) {
 			contentType = contentType.split(";")[0];
 		}

@@ -96,6 +96,7 @@ public class EncoderTest {
 		String response = "{\"name\":\"Brian Tree\"}";
 		Headers headers = new Headers();
 		headers.header("Content-Type", "application/JSON");
+		headers.mHeaders.put("Content-Type", "application/JSON");
 
 		Encoder encoder = new Encoder();
 
@@ -216,7 +217,7 @@ public class EncoderTest {
 		String response = "<h1>Hello!</h1>";
 		Headers headers = new Headers();
 		headers.header("Content-Type", "TEXT/HTML; charset=utf8");
-
+		headers.mHeaders.put("Content-Type", "TEXT/HTML; charset=utf8");
 		Encoder encoder = new Encoder();
 
 		String s = encoder.deserializeResponse(new ByteArrayInputStream(response.getBytes()), String.class, headers);
