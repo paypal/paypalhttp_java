@@ -40,37 +40,39 @@ allprojects {
         required { gradle.taskGraph.hasTask(tasks.uploadArchives) }
         sign configurations.archives
     }
+    if (project.hasProperty('release')) {
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
 
-                repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-                snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
-                    authentication(userName: ossrhUsername, password: ossrhPassword)
-                }
-
-                pom.project {
-                    developers {
-                        developer {
-                            id 'devs'
-                            name 'PayPal'
-                        }
+                    repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                        authentication(userName: ossrhUsername, password: ossrhPassword)
+                    }
+                    snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+                        authentication(userName: ossrhUsername, password: ossrhPassword)
                     }
 
-                  scm {
-                    url 'https://github.com/paypal/paypalhttp_java.git'
-                    connection 'scm:git:git://github.com/paypal/paypalhttp_java.git'
-                  }
+                    pom.project {
+                        developers {
+                            developer {
+                                id 'devs'
+                                name 'PayPal'
+                            }
+                        }
 
-                    licenses {
-                        license {
-                            name 'MIT'
-                            url 'http://opensource.org/licenses/MIT'
-                            distribution 'repo'
+                        scm {
+                            url 'https://github.com/paypal/paypalhttp_java.git'
+                            connection 'scm:git:git://github.com/paypal/paypalhttp_java.git'
+                        }
+
+                        licenses {
+                            license {
+                                name 'MIT'
+                                url 'http://opensource.org/licenses/MIT'
+                                distribution 'repo'
+                            }
                         }
                     }
                 }
@@ -105,19 +107,22 @@ project(':paypalhttp') {
         archives sourcesJar
     }
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+    if (project.hasProperty('release')) {
 
-                pom.project {
-                    name 'paypalhttp'
-                    artifactId 'paypalhttp'
-                    version = "${version}"
-                    groupId = 'com.paypal'
-                    packaging 'jar'
-                    description 'This is Paypal\'s generic http library for generated SDKs'
-                    url 'https://github.com/paypal/paypalhttp_java.git'
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+                    pom.project {
+                        name 'paypalhttp'
+                        artifactId 'paypalhttp'
+                        version = "${version}"
+                        groupId = 'com.paypal'
+                        packaging 'jar'
+                        description 'This is Paypal\'s generic http library for generated SDKs'
+                        url 'https://github.com/paypal/paypalhttp_java.git'
+                    }
                 }
             }
         }
@@ -145,19 +150,21 @@ project(':paypalhttp-testutils') {
         archives javadocsJar
         archives sourcesJar
     }
+    if (project.hasProperty('release')) {
 
-    uploadArchives {
-        repositories {
-            mavenDeployer {
-                beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
-                pom.project {
-                    name 'paypalhttp-testutils'
-                    artifactId 'paypalhttp-testutils'
-                    version = "${version}"
-                    groupId = 'com.paypal'
-                    packaging 'jar'
-                    description 'Test utilities for testing PayPalHttp and derived libraries'
-                    url 'https://github.com/paypal/paypalhttp_java.git'
+        uploadArchives {
+            repositories {
+                mavenDeployer {
+                    beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+                    pom.project {
+                        name 'paypalhttp-testutils'
+                        artifactId 'paypalhttp-testutils'
+                        version = "${version}"
+                        groupId = 'com.paypal'
+                        packaging 'jar'
+                        description 'Test utilities for testing PayPalHttp and derived libraries'
+                        url 'https://github.com/paypal/paypalhttp_java.git'
+                    }
                 }
             }
         }
