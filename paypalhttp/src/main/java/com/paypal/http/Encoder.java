@@ -80,6 +80,8 @@ public class Encoder {
 			System.out.println(message);
 			throw new UnsupportedEncodingException(message);
 		}
+		// Setting to lowercase
+		contentType = contentType.toLowerCase();
 
 		Serializer serializer = serializer(contentType);
 
