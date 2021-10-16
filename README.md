@@ -2,7 +2,7 @@
 
 PaypalHttp is a generic HTTP Client.
 
-In it's simplest form, an [`HttpClient`](./paypalhttp/src/main/java/com/paypal/http/HttpClient.java) exposes an `#execute` method which takes an `HttpRequest`, executes it against the domain described in an `Environment`, and returns an `HttpResponse`. It throws an `IOException` if anything goes wrong during execution.
+In it's simplest form, an [`HttpClient`](./paypalhttp/src/main/java/com/paypal/http/HttpClient.java) exposes an `#execute` method which takes an `HttpRequest`, executes it against the domain described in an `Environment`, and returns an `HttpResponse`. It throws an `IOException` if anything goes wrong during the course of execution.
 
 ### Environment
 
@@ -52,7 +52,7 @@ client.addInjector(req -> {
 
 ### Error Handling
 
-`HttpClient#execute` may throw an `IOException` if something went wrong during the course of execution. If the server returned a non-200 response, this execption will be an instance of [`HttpException`](./paypalhttp/src/main/java/com/paypal/http/exceptions/HttpException.java) that will contain a status code and headers you can use for debugging. 
+`HttpClient#execute` may throw an `IOException` if something goes wrong during the course of execution. If the server returns a non-200 response, this execption will be an instance of [`HttpException`](./paypalhttp/src/main/java/com/paypal/http/exceptions/HttpException.java) that will contain a status code and headers that you can use for debugging. 
 
 ```java
 try {
@@ -69,7 +69,7 @@ try {
 ```
 
 ### Serializer
-(De)Serialization of request and response data is done by implementations of the [`Serializer`](./paypalhttp/src/main/java/com/paypal/http/serializer/Serializer.java) interface. PaypalHttp currently supports `json` encoding out of the box.
+(De)Serialization of request and response data is performed by implementing the [`Serializer`](./paypalhttp/src/main/java/com/paypal/http/serializer/Serializer.java) interface. PaypalHttp currently supports `json` encoding out of the box.
 
 ### SSL
 
