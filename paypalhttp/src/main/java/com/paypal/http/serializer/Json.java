@@ -11,6 +11,10 @@ import java.lang.reflect.InvocationTargetException;
 import java.util.*;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import com.google.gson.Gson;
+import com.google.gson.GsonBuilder;
+import java.lang.reflect.Type;
+import com.google.gson.reflect.TypeToken;
 
 public class Json implements Serializer {
 
@@ -49,10 +53,14 @@ public class Json implements Serializer {
 	@Override
 	@SuppressWarnings("unchecked")
 	public <T> T decode(String source, Class<T> cls) throws IOException {
+		GsonBuilder gsonBuilder = new GsonBuilder();
+		gsonBuilder.setLenient();
+		Gson gson = gsonBuilder.create();
+
 		if (hasAncestor(cls, List.class) && cls.getAnnotation(ListOf.class) != null) {
 			ListOf listOf = cls.getAnnotation(ListOf.class);
 
-			List<Map<String, Object>> deserialized = (List<Map<String, Object>>) deserializeInternal(source);
+			List<Map<String, Object>> deserialized = gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
 			try {
 				T outlist = cls.newInstance();
 				for (Map<String, Object> map : deserialized) {
@@ -63,12 +71,35 @@ public class Json implements Serializer {
 			} catch (InstantiationException | IllegalAccessException e) {
 				throw new UnsupportedEncodingException("Could not instantiate type " + cls.getSimpleName());
 			}
-		} else if (hasAncestor(cls, List.class) || hasAncestor(cls, Map.class)) {
-			return (T) deserializeInternal(source);
+		} else if (hasAncestor(cls, List.class)) {
+			return gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
+		} else if (hasAncestor(cls, Map.class)) {
+			return gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
 		} else {
-			Map<String, Object> deserialized = (Map<String, Object>) deserializeInternal(source);
+			Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
 			return unmap(deserialized, cls);
 		}
+
+//		if (hasAncestor(cls, List.class) && cls.getAnnotation(ListOf.class) != null) {
+//			ListOf listOf = cls.getAnnotation(ListOf.class);
+//
+//			List<Map<String, Object>> deserialized = gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
+//			try {
+//				T outlist = cls.newInstance();
+//				for (Map<String, Object> map : deserialized) {
+//					((List) outlist).add(unmap(map, listOf.listClass()));
+//				}
+//
+//				return outlist;
+//			} catch (InstantiationException | IllegalAccessException e) {
+//				throw new UnsupportedEncodingException("Could not instantiate type " + cls.getSimpleName());
+//			}
+//		} else if (hasAncestor(cls, List.class) || hasAncestor(cls, Map.class)) {
+//			return (T) deserializeInternal(source);
+//		} else {
+//			Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
+//			return unmap(deserialized, cls);
+//		}
 	}
 
 	private <T> T unmap(Map<String, Object> map, Class<T> destinationClass) throws IOException {
@@ -87,14 +118,16 @@ public class Json implements Serializer {
 	}
 
 	public String serialize(Object o) throws SerializeException {
+
+		Gson gson = new Gson();
 		if (ObjectMapper.isModel(o)) {
 			try {
-				return jsonValueStringFor(ObjectMapper.map(o));
+				return gson.toJson(ObjectMapper.map(o));
 			} catch (IllegalAccessException e) {
 				throw new SerializeException(e.getMessage());
 			}
 		} else {
-			return jsonValueStringFor(o);
+			return gson.toJson(o);
 		}
 	}
 

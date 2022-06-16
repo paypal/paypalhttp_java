@@ -5,6 +5,7 @@ import com.paypal.http.annotations.ListOf;
 import com.paypal.http.annotations.Model;
 import com.paypal.http.annotations.SerializedName;
 import com.paypal.http.exceptions.JsonParseException;
+import com.paypal.http.exceptions.MalformedJsonException;
 import com.paypal.http.exceptions.SerializeException;
 import org.testng.annotations.Test;
 
@@ -156,7 +157,7 @@ public class JsonTest {
 			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
 			fail("Expected IOException");
 		} catch (IOException ite) {
-			assertTrue(ite instanceof JsonParseException);
+			assertTrue(ite instanceof MalformedJsonException);
 		}
     }
 
@@ -169,7 +170,7 @@ public class JsonTest {
 			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
             fail("Expected IOException");
         } catch (IOException ite) {
-        	assertTrue(ite instanceof JsonParseException);
+        	assertTrue(ite instanceof MalformedJsonException);
         }
     }
 
@@ -232,6 +233,15 @@ public class JsonTest {
        assertEquals("lake", zoo.animal.locales.get(1));
        assertEquals(false, zoo.animal.carnivorous.booleanValue());
     }
+
+	@Test()
+	public void testJson_deserialize_withBracketInString() throws IOException {
+		String serializedZoo = "{\"name\":\"Monterey Bay Aquarium\",\"animal\":{\"locales\":[\"ocean\",\"lake\"],\"kind\":\"swimmy\",\"carnivorous\":false,\"weight\":10,\"age\":3,\"appendages\":{\"Dorsal fin\":{\"size\":2,\"location\":\"ba}ck\"},\"Ventral fin\":{\"size\":2,\"location\":\"front\"}}},\"number_of_animals\":1}";
+
+		Zoo zoo  = new Json().decode(serializedZoo, Zoo.class);
+
+		assertEquals("ba}ck", zoo.animal.appendages.dorsalFin.location);
+	}
 
 	@Test()
 	public void testJson_deserialize_createsAnObjectWithNullValues() throws IOException {
