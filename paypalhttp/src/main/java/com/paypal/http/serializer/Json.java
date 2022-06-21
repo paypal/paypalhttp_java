@@ -77,7 +77,7 @@ public class Json implements Serializer {
 			try {
 				return gson.fromJson(source, cls);
 			} catch (com.google.gson.JsonSyntaxException e) {
-				throw new MalformedJsonException("Malformed Json Exception ");
+				throw new MalformedJsonException("Malformed Json " + e.getMessage());
 			}
 		} else {
 			try {
@@ -85,7 +85,7 @@ public class Json implements Serializer {
 				}.getType());
 				return unmap(deserialized, cls);
 			} catch (com.google.gson.JsonSyntaxException e) {
-				throw new MalformedJsonException("Malformed Json Exception ");
+				throw new MalformedJsonException("Malformed Json " + e.getMessage());
 			}
 		}
 	}
