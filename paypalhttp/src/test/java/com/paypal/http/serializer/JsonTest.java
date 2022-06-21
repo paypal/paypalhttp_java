@@ -88,34 +88,24 @@ public class JsonTest {
 
     /* Deserialize */
 
-//    @Test(expectedExceptions = JsonParseException.class)
 	@Test(expectedExceptions = MalformedJsonException.class)
     public void testJson_deserialize_errorsForNoOpenKeyQuote() throws IOException {
         String noStartQuote = "{\"my_key: \"value\"}";
 		new Json().decode(noStartQuote, Map.class);
     }
 
-	@Test(expectedExceptions = JsonParseException.class)
-	public void testJson_deserialize_errorsForNoEndKeyQuote() throws IOException {
-		String noStartQuote = "{my_key\": \"value\"}";
-		new Json().decode(noStartQuote, Map.class);
-	}
-
-//    @Test(expectedExceptions = JsonParseException.class)
 	@Test(expectedExceptions = MalformedJsonException.class)
     public void testJson_deserialize_throwsForJSONWithoutStartingBracket() throws IOException {
         String noStartBracket = "\"my_key\":\"my_value\"}";
 		new Json().decode(noStartBracket, Map.class);
     }
 
-//	@Test(expectedExceptions = JsonParseException.class)
 	@Test(expectedExceptions = MalformedJsonException.class)
 	public void testJson_deserialize_throwsForJSONWithoutEndingBracket() throws IOException {
 		String noStartBracket = "{\"my_key\":\"my_value\"";
 		new Json().decode(noStartBracket, Map.class);
 	}
 
-//    @Test(expectedExceptions = JsonParseException.class)
 	@Test(expectedExceptions = MalformedJsonException.class)
     public void testJson_deserialize_throwsForJSONWithoutColon() throws IOException {
         String noColon = "{\"my_key\"\"my_value\"}";
@@ -140,20 +130,6 @@ public class JsonTest {
     }
 
     @Test()
-    public void testJson_deserialize_throwsForInvalidBoolean() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
-		String json = "{\"is_false\": faslee}";
-    	Json j = new Json();
-
-		try {
-			Map<String, Object> a = j.decode(json, Map.class);
-			System.out.println(a.get("is_false").getClass().getName());
-			fail("Expected IOException");
-		} catch (IOException ite) {
-			assertTrue(ite instanceof JsonParseException);
-		}
-    }
-
-    @Test()
     public void testJson_deserialize_throwsForArrayMissingCommas() throws NoSuchMethodException, IllegalAccessException, InvocationTargetException {
     	Json j = new Json();
 		String json = "{\"locales\":[\"ocean\" \"lake\"]}";
@@ -162,7 +138,6 @@ public class JsonTest {
 			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
 			fail("Expected IOException");
 		} catch (IOException ite) {
-//			assertTrue(ite instanceof JsonParseException);
 			assertTrue(ite instanceof MalformedJsonException);
 		}
     }
@@ -176,7 +151,6 @@ public class JsonTest {
 			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
             fail("Expected IOException");
         } catch (IOException ite) {
-//        	assertTrue(ite instanceof JsonParseException);
 			assertTrue(ite instanceof MalformedJsonException);
         }
     }
