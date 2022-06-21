@@ -88,7 +88,8 @@ public class JsonTest {
 
     /* Deserialize */
 
-    @Test(expectedExceptions = JsonParseException.class)
+//    @Test(expectedExceptions = JsonParseException.class)
+	@Test(expectedExceptions = MalformedJsonException.class)
     public void testJson_deserialize_errorsForNoOpenKeyQuote() throws IOException {
         String noStartQuote = "{\"my_key: \"value\"}";
 		new Json().decode(noStartQuote, Map.class);
@@ -100,19 +101,22 @@ public class JsonTest {
 		new Json().decode(noStartQuote, Map.class);
 	}
 
-    @Test(expectedExceptions = JsonParseException.class)
+//    @Test(expectedExceptions = JsonParseException.class)
+	@Test(expectedExceptions = MalformedJsonException.class)
     public void testJson_deserialize_throwsForJSONWithoutStartingBracket() throws IOException {
         String noStartBracket = "\"my_key\":\"my_value\"}";
 		new Json().decode(noStartBracket, Map.class);
     }
 
-	@Test(expectedExceptions = JsonParseException.class)
+//	@Test(expectedExceptions = JsonParseException.class)
+	@Test(expectedExceptions = MalformedJsonException.class)
 	public void testJson_deserialize_throwsForJSONWithoutEndingBracket() throws IOException {
 		String noStartBracket = "{\"my_key\":\"my_value\"";
 		new Json().decode(noStartBracket, Map.class);
 	}
 
-    @Test(expectedExceptions = JsonParseException.class)
+//    @Test(expectedExceptions = JsonParseException.class)
+	@Test(expectedExceptions = MalformedJsonException.class)
     public void testJson_deserialize_throwsForJSONWithoutColon() throws IOException {
         String noColon = "{\"my_key\"\"my_value\"}";
         new Json().decode(noColon, Map.class);
@@ -142,6 +146,7 @@ public class JsonTest {
 
 		try {
 			Map<String, Object> a = j.decode(json, Map.class);
+			System.out.println(a.get("is_false").getClass().getName());
 			fail("Expected IOException");
 		} catch (IOException ite) {
 			assertTrue(ite instanceof JsonParseException);
@@ -157,6 +162,7 @@ public class JsonTest {
 			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
 			fail("Expected IOException");
 		} catch (IOException ite) {
+//			assertTrue(ite instanceof JsonParseException);
 			assertTrue(ite instanceof MalformedJsonException);
 		}
     }
@@ -170,7 +176,8 @@ public class JsonTest {
 			Zoo.Animal a = j.decode(json, Zoo.Animal.class);
             fail("Expected IOException");
         } catch (IOException ite) {
-        	assertTrue(ite instanceof MalformedJsonException);
+//        	assertTrue(ite instanceof JsonParseException);
+			assertTrue(ite instanceof MalformedJsonException);
         }
     }
 

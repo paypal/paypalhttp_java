@@ -3,6 +3,7 @@ package com.paypal.http.serializer;
 import com.paypal.http.HttpRequest;
 import com.paypal.http.annotations.ListOf;
 import com.paypal.http.exceptions.JsonParseException;
+import com.paypal.http.exceptions.MalformedJsonException;
 import com.paypal.http.exceptions.SerializeException;
 
 import java.io.IOException;
@@ -62,44 +63,29 @@ public class Json implements Serializer {
 
 			List<Map<String, Object>> deserialized = gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
 			try {
-				T outlist = cls.newInstance();
+				T outlist = cls.getDeclaredConstructor().newInstance();
 				for (Map<String, Object> map : deserialized) {
 					((List) outlist).add(unmap(map, listOf.listClass()));
 				}
 
 				return outlist;
-			} catch (InstantiationException | IllegalAccessException e) {
+			} catch (InstantiationException | IllegalAccessException | NoSuchMethodException | InvocationTargetException e) {
 				throw new UnsupportedEncodingException("Could not instantiate type " + cls.getSimpleName());
 			}
-		} else if (hasAncestor(cls, List.class)) {
-			return gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
-		} else if (hasAncestor(cls, Map.class)) {
-			return gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
+		} else if (hasAncestor(cls, List.class) || hasAncestor(cls, Map.class)) {
+			try {
+				return gson.fromJson(source, cls);
+			} catch (com.google.gson.JsonSyntaxException e) {
+				throw new MalformedJsonException("Malformed Json Exception ");
+			}
 		} else {
-			Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
-			return unmap(deserialized, cls);
+			try {
+				Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
+				return unmap(deserialized, cls);
+			} catch (com.google.gson.JsonSyntaxException e) {
+				throw new MalformedJsonException("Malformed Json Exception ");
+			}
 		}
-
-//		if (hasAncestor(cls, List.class) && cls.getAnnotation(ListOf.class) != null) {
-//			ListOf listOf = cls.getAnnotation(ListOf.class);
-//
-//			List<Map<String, Object>> deserialized = gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
-//			try {
-//				T outlist = cls.newInstance();
-//				for (Map<String, Object> map : deserialized) {
-//					((List) outlist).add(unmap(map, listOf.listClass()));
-//				}
-//
-//				return outlist;
-//			} catch (InstantiationException | IllegalAccessException e) {
-//				throw new UnsupportedEncodingException("Could not instantiate type " + cls.getSimpleName());
-//			}
-//		} else if (hasAncestor(cls, List.class) || hasAncestor(cls, Map.class)) {
-//			return (T) deserializeInternal(source);
-//		} else {
-//			Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
-//			return unmap(deserialized, cls);
-//		}
 	}
 
 	private <T> T unmap(Map<String, Object> map, Class<T> destinationClass) throws IOException {
@@ -108,7 +94,7 @@ public class Json implements Serializer {
 		} catch (IllegalAccessException | InstantiationException | NoSuchMethodException | InvocationTargetException e) {
 			throw new UnsupportedEncodingException("Could not instantiate type " + destinationClass.getSimpleName());
 		} catch (RuntimeException re) {
-			throw new JsonParseException("Unable to parse Json " + re.getMessage());
+			throw new MalformedJsonException("Unable to parse Json " + re.getMessage());
 		}
 	}
 
