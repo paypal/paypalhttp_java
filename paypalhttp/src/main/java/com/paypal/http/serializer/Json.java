@@ -2,7 +2,6 @@ package com.paypal.http.serializer;
 
 import com.paypal.http.HttpRequest;
 import com.paypal.http.annotations.ListOf;
-import com.paypal.http.exceptions.JsonParseException;
 import com.paypal.http.exceptions.MalformedJsonException;
 import com.paypal.http.exceptions.SerializeException;
 
@@ -14,20 +13,9 @@ import java.util.*;
 import static java.nio.charset.StandardCharsets.UTF_8;
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
-import java.lang.reflect.Type;
 import com.google.gson.reflect.TypeToken;
 
 public class Json implements Serializer {
-
-	private static final char OBJECT_TOKEN_OPEN = '{';
-	private static final char OBJECT_TOKEN_CLOSE = '}';
-	private static final char LIST_TOKEN_OPEN = '[';
-	private static final char LIST_TOKEN_CLOSE = ']';
-	private static final char KEY_DELIMITER = ':';
-	private static final char PAIR_DELIMITER = ',';
-	private static final char KEY_BARRIER = '"';
-	private static final char KEY_ESCAPER = 92; // '\' the backslash value
-
 
 	@Override
 	public String contentType() {
@@ -55,7 +43,6 @@ public class Json implements Serializer {
 	@SuppressWarnings("unchecked")
 	public <T> T decode(String source, Class<T> cls) throws IOException {
 		GsonBuilder gsonBuilder = new GsonBuilder();
-		gsonBuilder.setLenient();
 		Gson gson = gsonBuilder.create();
 
 		if (hasAncestor(cls, List.class) && cls.getAnnotation(ListOf.class) != null) {
