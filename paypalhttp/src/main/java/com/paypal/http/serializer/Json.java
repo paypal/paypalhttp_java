@@ -101,7 +101,27 @@ public class Json implements Serializer {
 				throw new SerializeException(e.getMessage());
 			}
 		} else {
-			return gson.toJson(o);
+			return jsonValueStringFor(o);
+		}
+	}
+
+	@SuppressWarnings("unchecked")
+	private String jsonValueStringFor(Object obj) throws SerializeException {
+		Gson gson = new Gson();
+		if (obj == null || obj instanceof String || obj instanceof Number || obj instanceof Boolean ) {
+			return gson.toJson(obj);
+		} else if (obj instanceof Object[] ){
+			return gson.toJson(obj, new TypeToken<List<String>>() {}.getType());
+		} else if (obj instanceof Collection) {
+			try {
+				return gson.toJson(obj, new TypeToken<List<String>>() {}.getType());
+			} catch (java.lang.ClassCastException _ignored) {
+				return gson.toJson(obj);
+			}
+		} else if (obj instanceof Map) {
+			return gson.toJson(obj, new TypeToken<Map<String, Object>>(){}.getType());
+		} else {
+			throw new SerializeException(String.format("Object of class %s could not be serialized as json", obj.getClass()));
 		}
 	}
 }
