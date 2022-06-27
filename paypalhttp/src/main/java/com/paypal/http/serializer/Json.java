@@ -1,5 +1,6 @@
 package com.paypal.http.serializer;
 
+import com.google.gson.FieldNamingPolicy;
 import com.paypal.http.HttpRequest;
 import com.paypal.http.annotations.ListOf;
 import com.paypal.http.exceptions.MalformedJsonException;
@@ -107,13 +108,15 @@ public class Json implements Serializer {
 
 	@SuppressWarnings("unchecked")
 	private String jsonValueStringFor(Object obj) throws SerializeException {
-		Gson gson = new Gson();
+		Gson gson = new GsonBuilder().setFieldNamingPolicy(FieldNamingPolicy.LOWER_CASE_WITH_UNDERSCORES).create();
 		if (obj == null || obj instanceof String || obj instanceof Number || obj instanceof Boolean ) {
 			return gson.toJson(obj);
 		} else if (obj instanceof Object[] || obj instanceof Collection ){
 			return gson.toJson(obj, new TypeToken<List<Object>>() {}.getType());
 		} else if (obj instanceof Map) {
 			return gson.toJson(obj, new TypeToken<Map<String, Object>>(){}.getType());
+		} else if (ObjectMapper.isModel(obj)) {
+			return serialize(obj);
 		} else {
 			throw new SerializeException(String.format("Object of class %s could not be serialized as json", obj.getClass()));
 		}
