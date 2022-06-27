@@ -4,7 +4,6 @@ import com.paypal.http.Zoo;
 import com.paypal.http.annotations.ListOf;
 import com.paypal.http.annotations.Model;
 import com.paypal.http.annotations.SerializedName;
-import com.paypal.http.exceptions.JsonParseException;
 import com.paypal.http.exceptions.MalformedJsonException;
 import com.paypal.http.exceptions.SerializeException;
 import org.testng.annotations.Test;
