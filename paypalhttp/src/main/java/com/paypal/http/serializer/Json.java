@@ -43,14 +43,12 @@ public class Json implements Serializer {
     @Override
     @SuppressWarnings("unchecked")
     public <T> T decode(String source, Class<T> cls) throws IOException {
-        GsonBuilder gsonBuilder = new GsonBuilder();
-        Gson gson = gsonBuilder.create();
+        Gson gson = new GsonBuilder().create();
 
         if (hasAncestor(cls, List.class) && cls.getAnnotation(ListOf.class) != null) {
             ListOf listOf = cls.getAnnotation(ListOf.class);
 
-            List<Map<String, Object>> deserialized = gson.fromJson(source, new TypeToken<List<Map<String, Object>>>() {
-            }.getType());
+            List<Map<String, Object>> deserialized = gson.fromJson(source, new TypeToken<List<Map<String, Object>>>(){}.getType());
             try {
                 T outlist = cls.getDeclaredConstructor().newInstance();
                 for (Map<String, Object> map : deserialized) {
@@ -69,8 +67,7 @@ public class Json implements Serializer {
             }
         } else {
             try {
-                Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>() {
-                }.getType());
+                Map<String, Object> deserialized = gson.fromJson(source, new TypeToken<Map<String, Object>>(){}.getType());
                 return unmap(deserialized, cls);
             } catch (com.google.gson.JsonSyntaxException e) {
                 throw new MalformedJsonException("Malformed Json " + e.getMessage());
@@ -112,7 +109,7 @@ public class Json implements Serializer {
         if (obj == null || obj instanceof String || obj instanceof Number || obj instanceof Boolean ) {
             return gson.toJson(obj);
         } else if (obj instanceof Object[] || obj instanceof Collection ){
-            return gson.toJson(obj, new TypeToken<List<Object>>() {}.getType());
+            return gson.toJson(obj, new TypeToken<List<Object>>(){}.getType());
         } else if (obj instanceof Map) {
             return gson.toJson(obj, new TypeToken<Map<String, Object>>(){}.getType());
         } else if (ObjectMapper.isModel(obj)) {
