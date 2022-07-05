@@ -1,3 +1,6 @@
+## unreleased
+* Change JSON serializer to use gson
+
 ## 1.3.2
 * Fix Case Sensitivity of Content Type for deserialization process
 
