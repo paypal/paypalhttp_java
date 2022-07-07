@@ -1,3 +1,7 @@
+## unreleased
+* Change JSON serializer to use gson.
+* Replace error JsonParseException to MalformedJsonException as a breaking change.
+
 ## 1.3.2
 * Fix Case Sensitivity of Content Type for deserialization process
 
