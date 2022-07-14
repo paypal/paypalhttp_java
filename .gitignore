@@ -7,3 +7,4 @@ gradle.properties
 paypalhttp/out/*
 paypalhttp-testutils/out/*
 local.properties
+**/*.gpg
