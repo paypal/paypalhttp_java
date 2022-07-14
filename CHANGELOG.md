@@ -1,4 +1,4 @@
-## unreleased
+## 2.0.0 
 * Change JSON serializer to use gson.
 * Replace error JsonParseException to MalformedJsonException as a breaking change.
 
